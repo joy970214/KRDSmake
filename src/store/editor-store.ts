@@ -25,6 +25,39 @@ function insertChild(
   );
 }
 
+function findNode(nodes: SitemapNode[], id: string): SitemapNode | undefined {
+  for (const n of nodes) {
+    if (n.id === id) return n;
+    if (n.children) {
+      const f = findNode(n.children, id);
+      if (f) return f;
+    }
+  }
+  return undefined;
+}
+
+// 부모(없으면 루트)의 children 배열 index 위치에 child 삽입
+function insertAt(
+  nodes: SitemapNode[],
+  parentId: string | undefined,
+  child: SitemapNode,
+  index: number,
+): SitemapNode[] {
+  if (!parentId) {
+    const copy = [...nodes];
+    copy.splice(index, 0, child);
+    return copy;
+  }
+  return nodes.map((n) => {
+    if (n.id === parentId) {
+      const children = [...(n.children ?? [])];
+      children.splice(index, 0, child);
+      return { ...n, children };
+    }
+    return n.children ? { ...n, children: insertAt(n.children, parentId, child, index) } : n;
+  });
+}
+
 function updateNode(
   nodes: SitemapNode[],
   id: string,
@@ -84,6 +117,8 @@ export type EditorState = {
   renameNode: (id: string, patch: { title?: string; slug?: string }) => void;
   deleteNode: (id: string) => void;
   setHome: (id: string) => void;
+  moveNode: (id: string, targetParentId: string | undefined, index: number) => void;
+  setActivePage: (pageId: string) => void;
 };
 
 export type EditorStore = StoreApi<EditorState>;
@@ -181,6 +216,29 @@ export function createEditorStore(): EditorStore {
       }
       sitemap = updateNode(sitemap, id, { isHome: true, slug: "" });
       set({ site: syncSite(site, sitemap) });
+    },
+
+    moveNode(id, targetParentId, index) {
+      const site = get().site;
+      if (!site) return;
+      const moving = findNode(site.sitemap, id);
+      if (!moving) return;
+
+      // 순환 방지: 대상 부모가 자기 자신/자손이면 불가
+      const movingIds = new Set(flatten([moving]).map((n) => n.id));
+      if (targetParentId && movingIds.has(targetParentId)) {
+        throw new Error("자기 자신 또는 자손 아래로는 이동할 수 없습니다");
+      }
+
+      const { nodes, removed } = removeSubtree(site.sitemap, id);
+      if (!removed) return;
+      const moved: SitemapNode = { ...removed, parentId: targetParentId };
+      const inserted = insertAt(nodes, targetParentId, moved, index);
+      set({ site: syncSite(site, inserted) });
+    },
+
+    setActivePage(pageId) {
+      set({ activePageId: pageId });
     },
   }));
 }

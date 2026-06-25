@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./krds-fonts.css";
 import "./globals.css";
+import "./editor.css";
 
 export const metadata: Metadata = {
   title: "KRDS 웹사이트 빌더",

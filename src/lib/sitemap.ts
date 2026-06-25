@@ -9,11 +9,13 @@ export function joinPath(parentPath: string, slug: string): string {
 // 홈 노드는 항상 "/". 설계 불변식 2·3.
 export function recomputePaths(nodes: SitemapNode[]): SitemapNode[] {
   const walk = (list: SitemapNode[], parentPath: string): SitemapNode[] =>
-    list.map((n) => {
+    list.map((n, i) => {
       const path = n.isHome ? "/" : joinPath(parentPath, n.slug);
+      // order는 형제 내 위치 기반 파생값으로 함께 갱신
       return {
         ...n,
         path,
+        order: i,
         children: n.children ? walk(n.children, path) : n.children,
       };
     });

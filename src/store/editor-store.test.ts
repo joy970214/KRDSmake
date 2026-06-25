@@ -102,6 +102,44 @@ describe("setHome", () => {
   });
 });
 
+describe("setActivePage", () => {
+  it("활성 페이지를 바꾼다", () => {
+    const id = store.getState().addSitemapNode({ title: "A", slug: "a" });
+    const pageId = store.getState().site!.sitemap.find((n) => n.id === id)!.pageId;
+    store.getState().setActivePage(pageId);
+    expect(store.getState().activePageId).toBe(pageId);
+  });
+});
+
+describe("moveNode", () => {
+  it("다른 부모 아래로 옮기면 path가 재계산된다", () => {
+    const aId = store.getState().addSitemapNode({ title: "A", slug: "a" });
+    const bId = store.getState().addSitemapNode({ title: "B", slug: "b" });
+
+    store.getState().moveNode(bId, aId, 0); // b를 a의 자식으로
+
+    const b = findInTree(store.getState().site!.sitemap, bId)!;
+    expect(b.path).toBe("/a/b");
+    expect(b.parentId).toBe(aId);
+  });
+
+  it("같은 부모 내에서 순서를 바꾼다", () => {
+    const aId = store.getState().addSitemapNode({ title: "A", slug: "a" });
+    const bId = store.getState().addSitemapNode({ title: "B", slug: "b" });
+    // 루트 순서: home(0), a(1), b(2). b를 index 1로 → a 앞으로
+    store.getState().moveNode(bId, undefined, 1);
+
+    const ids = store.getState().site!.sitemap.map((n) => n.id);
+    expect(ids.indexOf(bId)).toBeLessThan(ids.indexOf(aId));
+  });
+
+  it("자기 자손 아래로는 옮길 수 없다(순환 방지)", () => {
+    const aId = store.getState().addSitemapNode({ title: "A", slug: "a" });
+    const cId = store.getState().addSitemapNode({ title: "C", slug: "c", parentId: aId });
+    expect(() => store.getState().moveNode(aId, cId, 0)).toThrow();
+  });
+});
+
 // 트리에서 id로 노드 찾기 (테스트 헬퍼)
 function findInTree(
   nodes: import("../lib/types").SitemapNode[],

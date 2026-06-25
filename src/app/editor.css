@@ -1,0 +1,246 @@
+/* 3패널 에디터 셸 레이아웃 — 설계 §6. 색은 KRDS 토큰(--krds-*) 사용. */
+
+.editor-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* 상단바 */
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--krds-color-light-gray-20, #cdd1d5);
+  background: var(--krds-color-light-gray-0, #fff);
+  flex: 0 0 auto;
+}
+.app-name {
+  font-size: 15px;
+}
+.topbar-sitename {
+  color: var(--krds-color-light-gray-60, #58616a);
+  font-size: 13px;
+}
+.topbar-spacer {
+  flex: 1;
+}
+.topbar-hint {
+  font-size: 12px;
+  color: var(--krds-color-light-gray-50, #6d7882);
+}
+
+/* 본문 3패널 */
+.editor-body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+.panel {
+  overflow: auto;
+  min-height: 0;
+}
+.panel-left {
+  flex: 0 0 300px;
+  border-right: 1px solid var(--krds-color-light-gray-20, #cdd1d5);
+  background: var(--krds-color-light-gray-5, #f4f5f6);
+}
+.panel-center {
+  flex: 1;
+  background: var(--krds-color-light-gray-10, #e6e8ea);
+  padding: 20px;
+}
+.panel-right {
+  flex: 0 0 300px;
+  border-left: 1px solid var(--krds-color-light-gray-20, #cdd1d5);
+  background: var(--krds-color-light-gray-0, #fff);
+  padding: 16px;
+}
+.panel-placeholder,
+.panel-head {
+  font-size: 13px;
+}
+.panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px;
+  border-bottom: 1px solid var(--krds-color-light-gray-20, #cdd1d5);
+}
+.panel-placeholder {
+  color: var(--krds-color-light-gray-50, #6d7882);
+  padding: 16px 4px;
+}
+
+/* 좌측 탭 */
+.tab-bar {
+  display: flex;
+  border-bottom: 1px solid var(--krds-color-light-gray-20, #cdd1d5);
+}
+.tab {
+  flex: 1;
+  padding: 10px;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--krds-color-light-gray-60, #58616a);
+}
+.tab.active {
+  color: var(--krds-color-light-primary-50, #256ef4);
+  box-shadow: inset 0 -2px 0 var(--krds-color-light-primary-50, #256ef4);
+  font-weight: 700;
+}
+
+/* 사이트맵 트리 */
+.sitemap-tree {
+  list-style: none;
+  margin: 0;
+  padding-left: 12px;
+}
+.sitemap-tree .sitemap-tree {
+  padding-left: 16px;
+  border-left: 1px dashed var(--krds-color-light-gray-30, #b1b8be);
+}
+.node-row {
+  display: flex;
+  align-items: center;
+  padding: 4px 6px;
+  border-radius: 4px;
+}
+.node-row:hover {
+  background: var(--krds-color-light-gray-10, #e6e8ea);
+}
+.node-view,
+.node-edit {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+}
+.node-title {
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 0;
+}
+.node-path {
+  font-size: 11px;
+  color: var(--krds-color-light-gray-50, #6d7882);
+}
+.node-home-badge {
+  font-size: 10px;
+  background: var(--krds-color-light-primary-50, #256ef4);
+  color: #fff;
+  border-radius: 3px;
+  padding: 1px 4px;
+}
+.node-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 2px;
+}
+.node-actions button {
+  border: 1px solid var(--krds-color-light-gray-20, #cdd1d5);
+  background: var(--krds-color-light-gray-0, #fff);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 11px;
+  line-height: 1;
+  padding: 3px 5px;
+}
+.node-edit input {
+  border: 1px solid var(--krds-color-light-gray-30, #b1b8be);
+  border-radius: 4px;
+  padding: 3px 6px;
+  font-size: 12px;
+  width: 90px;
+}
+
+/* 컴포넌트 팔레트 */
+.component-palette {
+  list-style: none;
+  margin: 0;
+  padding: 8px;
+  display: grid;
+  gap: 8px;
+}
+.palette-card {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 8px;
+  background: var(--krds-color-light-gray-0, #fff);
+  border: 1px solid var(--krds-color-light-gray-20, #cdd1d5);
+  border-radius: 8px;
+  cursor: grab;
+}
+.palette-thumb {
+  border-radius: 4px;
+  object-fit: cover;
+  flex: 0 0 auto;
+  background: var(--krds-color-light-gray-10, #e6e8ea);
+}
+.palette-thumb-empty {
+  width: 84px;
+  height: 60px;
+  display: inline-block;
+}
+.palette-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.palette-name {
+  font-size: 13px;
+  font-weight: 600;
+}
+.palette-cat {
+  font-size: 11px;
+  color: var(--krds-color-light-gray-50, #6d7882);
+}
+.palette-badge {
+  font-size: 10px;
+  align-self: flex-start;
+  border: 1px solid var(--krds-color-light-gray-30, #b1b8be);
+  border-radius: 3px;
+  padding: 0 4px;
+  color: var(--krds-color-light-gray-60, #58616a);
+}
+
+/* 캔버스 */
+.canvas {
+  display: flex;
+  justify-content: center;
+}
+.canvas-frame {
+  width: 100%;
+  max-width: 1200px;
+  background: var(--krds-color-light-gray-0, #fff);
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.12);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.canvas-page {
+  padding: 32px 24px;
+  min-height: 240px;
+}
+.canvas-page-title {
+  margin: 0 0 16px;
+}
+.empty-guide {
+  color: var(--krds-color-light-gray-50, #6d7882);
+  border: 2px dashed var(--krds-color-light-gray-30, #b1b8be);
+  border-radius: 8px;
+  padding: 40px;
+  text-align: center;
+}
+.app-loading {
+  padding: 40px;
+  text-align: center;
+  color: var(--krds-color-light-gray-50, #6d7882);
+}
