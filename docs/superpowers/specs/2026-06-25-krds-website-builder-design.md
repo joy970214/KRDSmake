@@ -223,6 +223,15 @@ type ExportCtx = {
   framework: 'html' | 'vue' | 'react';
 };
 
+// 캔버스 미리보기용 컨텍스트 (자산 해석 + 현재 미리보기 모드/디바이스)
+type PreviewCtx = {
+  site: Site;
+  page: Page;
+  resolveAsset: (ref: AssetRef) => Asset | undefined;
+  mode: 'light' | 'high-contrast' | 'system';
+  device: 'pc' | 'tablet' | 'mobile';
+};
+
 type ComponentDefinition = {
   id: string;
   name: string;                 // 한국어 표시명
