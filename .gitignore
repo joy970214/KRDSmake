@@ -42,3 +42,4 @@ next-env.d.ts
 
 # KRDS vendored assets copied into public at build time (source of truth: vendor/krds)
 /public/krds
+/public/krds-thumbnails

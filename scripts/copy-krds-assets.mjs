@@ -24,3 +24,13 @@ for (const d of dirs) {
 }
 
 console.log(`[krds-assets] 복사 완료: public/krds (${dirs.join(", ")})`);
+
+// 컴포넌트 썸네일(가이드 사이트 출처, 별도 vendoring) → public/krds-thumbnails
+const thumbSrc = join(root, "vendor", "krds-thumbnails", "img");
+const thumbDest = join(root, "public", "krds-thumbnails", "img");
+if (existsSync(thumbSrc)) {
+  rmSync(join(root, "public", "krds-thumbnails"), { recursive: true, force: true });
+  mkdirSync(thumbDest, { recursive: true });
+  cpSync(thumbSrc, thumbDest, { recursive: true });
+  console.log("[krds-assets] 복사 완료: public/krds-thumbnails");
+}

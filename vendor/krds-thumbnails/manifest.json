@@ -1,0 +1,442 @@
+[
+  {
+    "n": 1,
+    "nameKo": "공식 배너",
+    "nameEn": "Masthead",
+    "category": "아이덴티티",
+    "detail": "component_02_01.html",
+    "thumb": "img_guide_component_01.png"
+  },
+  {
+    "n": 2,
+    "nameKo": "운영기관 식별자",
+    "nameEn": "Identifier",
+    "category": "아이덴티티",
+    "detail": "component_02_02.html",
+    "thumb": "img_guide_component_02.png"
+  },
+  {
+    "n": 3,
+    "nameKo": "헤더",
+    "nameEn": "Header",
+    "category": "아이덴티티",
+    "detail": "component_02_03.html",
+    "thumb": "img_guide_component_03.png"
+  },
+  {
+    "n": 4,
+    "nameKo": "푸터",
+    "nameEn": "Footer",
+    "category": "아이덴티티",
+    "detail": "component_02_04.html",
+    "thumb": "img_guide_component_04.png"
+  },
+  {
+    "n": 5,
+    "nameKo": "건너뛰기 링크",
+    "nameEn": "Skip link",
+    "category": "탐색",
+    "detail": "component_03_01.html",
+    "thumb": "img_guide_component_05.png"
+  },
+  {
+    "n": 6,
+    "nameKo": "메인 메뉴",
+    "nameEn": "Main menu",
+    "category": "탐색",
+    "detail": "component_03_02.html",
+    "thumb": "img_guide_component_06.png"
+  },
+  {
+    "n": 7,
+    "nameKo": "브레드크럼",
+    "nameEn": "Breadcrumb",
+    "category": "탐색",
+    "detail": "component_03_03.html",
+    "thumb": "img_guide_component_07.png"
+  },
+  {
+    "n": 8,
+    "nameKo": "사이드 메뉴",
+    "nameEn": "Side navigation",
+    "category": "탐색",
+    "detail": "component_03_04.html",
+    "thumb": "img_guide_component_08.png"
+  },
+  {
+    "n": 9,
+    "nameKo": "콘텐츠 내 탐색",
+    "nameEn": "In-page navigation",
+    "category": "탐색",
+    "detail": "component_03_05.html",
+    "thumb": "img_guide_component_09.png"
+  },
+  {
+    "n": 10,
+    "nameKo": "페이지네이션",
+    "nameEn": "Pagination",
+    "category": "탐색",
+    "detail": "component_03_06.html",
+    "thumb": "img_guide_component_10.png"
+  },
+  {
+    "n": 11,
+    "nameKo": "탭바",
+    "nameEn": "Tab bars",
+    "category": "모바일",
+    "detail": "component_12_07.html",
+    "thumb": "img_guide_component_11.png"
+  },
+  {
+    "n": 12,
+    "nameKo": "구조화 목록",
+    "nameEn": "Structured list",
+    "category": "레이아웃 및 표현",
+    "detail": "component_04_01.html",
+    "thumb": "img_guide_component_12.png"
+  },
+  {
+    "n": 13,
+    "nameKo": "긴급 공지",
+    "nameEn": "Critical alerts",
+    "category": "레이아웃 및 표현",
+    "detail": "component_04_02.html",
+    "thumb": "img_guide_component_13.png"
+  },
+  {
+    "n": 14,
+    "nameKo": "달력",
+    "nameEn": "Calendar",
+    "category": "레이아웃 및 표현",
+    "detail": "component_04_03.html",
+    "thumb": "img_guide_component_14.png"
+  },
+  {
+    "n": 15,
+    "nameKo": "디스클로저",
+    "nameEn": "Disclosure",
+    "category": "레이아웃 및 표현",
+    "detail": "component_04_04.html",
+    "thumb": "img_guide_component_15.png"
+  },
+  {
+    "n": 16,
+    "nameKo": "모달",
+    "nameEn": "Modal",
+    "category": "레이아웃 및 표현",
+    "detail": "component_04_05.html",
+    "thumb": "img_guide_component_16.png"
+  },
+  {
+    "n": 17,
+    "nameKo": "배지",
+    "nameEn": "Badge",
+    "category": "레이아웃 및 표현",
+    "detail": "component_04_06.html",
+    "thumb": "img_guide_component_17.png"
+  },
+  {
+    "n": 18,
+    "nameKo": "아코디언",
+    "nameEn": "Accordion",
+    "category": "레이아웃 및 표현",
+    "detail": "component_04_07.html",
+    "thumb": "img_guide_component_18.png"
+  },
+  {
+    "n": 19,
+    "nameKo": "이미지",
+    "nameEn": "Image",
+    "category": "레이아웃 및 표현",
+    "detail": "component_04_08.html",
+    "thumb": "img_guide_component_19.png"
+  },
+  {
+    "n": 20,
+    "nameKo": "캐러셀",
+    "nameEn": "Carousel",
+    "category": "레이아웃 및 표현",
+    "detail": "component_04_09.html",
+    "thumb": "img_guide_component_20.png"
+  },
+  {
+    "n": 21,
+    "nameKo": "탭",
+    "nameEn": "Tab",
+    "category": "레이아웃 및 표현",
+    "detail": "component_04_10.html",
+    "thumb": "img_guide_component_21.png"
+  },
+  {
+    "n": 22,
+    "nameKo": "표",
+    "nameEn": "Table",
+    "category": "레이아웃 및 표현",
+    "detail": "component_04_11.html",
+    "thumb": "img_guide_component_22.png"
+  },
+  {
+    "n": 23,
+    "nameKo": "스플래시 스크린",
+    "nameEn": "Splash screen",
+    "category": "모바일",
+    "detail": "component_12_08.html",
+    "thumb": "img_guide_component_23.png"
+  },
+  {
+    "n": 24,
+    "nameKo": "텍스트 목록",
+    "nameEn": "Text list",
+    "category": "레이아웃 및 표현",
+    "detail": "component_04_13.html",
+    "thumb": "img_guide_component_24.png"
+  },
+  {
+    "n": 25,
+    "nameKo": "링크",
+    "nameEn": "Link",
+    "category": "액션",
+    "detail": "component_05_01.html",
+    "thumb": "img_guide_component_25.png"
+  },
+  {
+    "n": 26,
+    "nameKo": "버튼",
+    "nameEn": "Button",
+    "category": "액션",
+    "detail": "component_05_02.html",
+    "thumb": "img_guide_component_26.png"
+  },
+  {
+    "n": 27,
+    "nameKo": "라디오 버튼",
+    "nameEn": "Radio button",
+    "category": "선택",
+    "detail": "component_06_01.html",
+    "thumb": "img_guide_component_27.png"
+  },
+  {
+    "n": 28,
+    "nameKo": "체크박스",
+    "nameEn": "Checkbox",
+    "category": "선택",
+    "detail": "component_06_02.html",
+    "thumb": "img_guide_component_28.png"
+  },
+  {
+    "n": 29,
+    "nameKo": "셀렉트",
+    "nameEn": "Select",
+    "category": "선택",
+    "detail": "component_06_03.html",
+    "thumb": "img_guide_component_29.png"
+  },
+  {
+    "n": 30,
+    "nameKo": "태그",
+    "nameEn": "Tag",
+    "category": "선택",
+    "detail": "component_06_04.html",
+    "thumb": "img_guide_component_30.png"
+  },
+  {
+    "n": 31,
+    "nameKo": "토글 스위치",
+    "nameEn": "Toggle switch",
+    "category": "선택",
+    "detail": "component_06_07.html",
+    "thumb": "img_guide_component_31.png"
+  },
+  {
+    "n": 32,
+    "nameKo": "단계 표시기",
+    "nameEn": "Step indicator",
+    "category": "피드백",
+    "detail": "component_07_01.html",
+    "thumb": "img_guide_component_32.png"
+  },
+  {
+    "n": 33,
+    "nameKo": "스피너",
+    "nameEn": "Spinner",
+    "category": "피드백",
+    "detail": "component_07_02.html",
+    "thumb": "img_guide_component_33.png"
+  },
+  {
+    "n": 34,
+    "nameKo": "도움 패널",
+    "nameEn": "Help panel",
+    "category": "입력",
+    "detail": "component_08_01.html",
+    "thumb": "img_guide_component_34.png"
+  },
+  {
+    "n": 35,
+    "nameKo": "따라하기 패널",
+    "nameEn": "Tutorial panel",
+    "category": "도움",
+    "detail": "component_08_02.html",
+    "thumb": "img_guide_component_35.png"
+  },
+  {
+    "n": 36,
+    "nameKo": "맥락적 도움말",
+    "nameEn": "Contextual help",
+    "category": "도움",
+    "detail": "component_08_03.html",
+    "thumb": "img_guide_component_36.png"
+  },
+  {
+    "n": 37,
+    "nameKo": "코치마크",
+    "nameEn": "Coach mark",
+    "category": "도움",
+    "detail": "component_08_04.html",
+    "thumb": "img_guide_component_37.png"
+  },
+  {
+    "n": 38,
+    "nameKo": "툴팁",
+    "nameEn": "Tooltip",
+    "category": "도움",
+    "detail": "component_08_05.html",
+    "thumb": "img_guide_component_38.png"
+  },
+  {
+    "n": 39,
+    "nameKo": "날짜 입력 필드",
+    "nameEn": "Date input",
+    "category": "입력",
+    "detail": "component_09_01.html",
+    "thumb": "img_guide_component_39.png"
+  },
+  {
+    "n": 40,
+    "nameKo": "텍스트 영역",
+    "nameEn": "Textarea",
+    "category": "입력",
+    "detail": "component_09_02.html",
+    "thumb": "img_guide_component_40.png"
+  },
+  {
+    "n": 41,
+    "nameKo": "텍스트 입력 필드",
+    "nameEn": "Text input",
+    "category": "입력",
+    "detail": "component_09_03.html",
+    "thumb": "img_guide_component_41.png"
+  },
+  {
+    "n": 42,
+    "nameKo": "파일 업로드",
+    "nameEn": "File upload",
+    "category": "입력",
+    "detail": "component_09_04.html",
+    "thumb": "img_guide_component_42.png"
+  },
+  {
+    "n": 43,
+    "nameKo": "언어 변경",
+    "nameEn": "Language switcher",
+    "category": "설정",
+    "detail": "component_10_01.html",
+    "thumb": "img_guide_component_43.png"
+  },
+  {
+    "n": 44,
+    "nameKo": "화면 크기 조정",
+    "nameEn": "Resize",
+    "category": "설정",
+    "detail": "component_10_02.html",
+    "thumb": "img_guide_component_44.png"
+  },
+  {
+    "n": 45,
+    "nameKo": "접근 가능한 미디어",
+    "nameEn": "Accessible multimedia",
+    "category": "콘텐츠",
+    "detail": "component_11_01.html",
+    "thumb": "img_guide_component_45.png"
+  },
+  {
+    "n": 46,
+    "nameKo": "숨긴 콘텐츠",
+    "nameEn": "Visually hidden",
+    "category": "콘텐츠",
+    "detail": "component_11_02.html",
+    "thumb": "img_guide_component_46.png"
+  },
+  {
+    "n": 47,
+    "nameKo": "범위슬라이드",
+    "nameEn": "Range slider",
+    "category": "모바일",
+    "detail": "component_12_01.html",
+    "thumb": "img_guide_component_47.png"
+  },
+  {
+    "n": 48,
+    "nameKo": "뒤로가기 버튼",
+    "nameEn": "Back button",
+    "category": "모바일",
+    "detail": "component_12_02.html",
+    "thumb": "img_guide_component_48.png"
+  },
+  {
+    "n": 49,
+    "nameKo": "바텀시트",
+    "nameEn": "Bottom sheet",
+    "category": "모바일",
+    "detail": "component_12_03.html",
+    "thumb": "img_guide_component_49.png"
+  },
+  {
+    "n": 50,
+    "nameKo": "수량 토글",
+    "nameEn": "Quantity toggle",
+    "category": "모바일",
+    "detail": "component_12_04.html",
+    "thumb": "img_guide_component_50.png"
+  },
+  {
+    "n": 51,
+    "nameKo": "토스트",
+    "nameEn": "Toast",
+    "category": "모바일",
+    "detail": "component_12_05.html",
+    "thumb": "img_guide_component_51.png"
+  },
+  {
+    "n": 52,
+    "nameKo": "스낵바",
+    "nameEn": "Snackbar",
+    "category": "모바일",
+    "detail": "component_12_06.html",
+    "thumb": "img_guide_component_52.png"
+  },
+  {
+    "n": 53,
+    "nameKo": "파비콘",
+    "nameEn": "Favicon",
+    "category": "레이아웃 및 표현",
+    "detail": "component_04_14.html",
+    "thumb": "img_guide_component_53.png"
+  },
+  {
+    "n": 54,
+    "nameKo": "플로팅 버튼",
+    "nameEn": "FAB",
+    "category": "액션",
+    "detail": "component_05_03.html",
+    "thumb": "img_guide_component_54.png"
+  },
+  {
+    "n": 55,
+    "nameKo": "음성지원",
+    "nameEn": "TTS",
+    "category": "도움",
+    "detail": "component_08_06.html",
+    "thumb": "img_guide_component_55.png"
+  }
+]
