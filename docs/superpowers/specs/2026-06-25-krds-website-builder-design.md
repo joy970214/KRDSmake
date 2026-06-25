@@ -1,7 +1,7 @@
 # KRDS 기반 공공 웹사이트 빌더 — 설계 문서
 
 - 작성일: 2026-06-25
-- 상태: 승인됨 (구현 착수 전)
+- 상태: 승인됨 (구현 착수 전) · KRDS 공식 사이트/자산 대조 검증 완료 2026-06-25 (13장 참조)
 - 범위: 전체 제품 아키텍처 설계 + 1차 MVP 구현 경계
 
 ---
@@ -167,14 +167,51 @@ type AssetRef = { assetId: string };
 ```ts
 type ThemeSettings = {
   mode: 'light' | 'high-contrast' | 'system';
-  baseFontSize: number;          // px
-  // 실제 색/타이포 값은 krds-theme.css 변수가 단일 출처
+  baseFontSize: number;          // px — KRDS 본문 기본 17px (rem 루트 환산 기준은 별도 10px=62.5%)
+  // 실제 색/타이포 값은 krds_tokens.css 변수가 단일 출처 (파일명 언더스코어, --krds-* 네임스페이스)
 };
 
 type GlobalLayoutSettings = {
+  masthead: MastheadSettings;    // 공식 배너 — 헤더와 별도 전역 요소(스크롤 고정 제외)
   header: HeaderSettings;        // 기획서 4.4-2 입력항목
   footer: FooterSettings;        // 기획서 4.4-3 입력항목
+  skipLink: { enabled: boolean }; // 건너뛰기 링크(접근성 필수) — 기본 on
 };
+
+// 공식 배너(마스트헤드): 정부 식별 배너. 헤더 위 최상단, 스크롤 고정 시 제외.
+type MastheadSettings = {
+  visible: boolean;              // 기본 true (정부 사이트 권장)
+  text?: string;                 // 예: "이 누리집은 대한민국 공식 전자정부 누리집입니다."
+};
+
+type HeaderSettings = {
+  logo?: AssetRef;               // 서비스 아이덴티티
+  serviceName: string;
+  utilityLinks: NavLink[];       // 유틸리티 링크 그룹(5+ 시 드롭다운)
+  showSearch: boolean;           // 통합검색
+  showAllMenu: boolean;          // 전체메뉴
+  sticky: boolean;               // 스크롤 고정(공식 배너는 제외)
+  auth: {                        // 로그인과 별개로 회원가입·개인메뉴 분리
+    showLogin: boolean;
+    showSignup: boolean;
+    showMyMenu: boolean;         // 개인 메뉴("나의 GOV" 류)
+  };
+};
+
+type FooterSettings = {
+  logo?: AssetRef;               // 푸터 서비스 로고
+  organizationName: string;      // 운영기관 식별자
+  address?: string;
+  tel?: string;
+  email?: string;                // KRDS 비표준 — 선택(optional)
+  copyright: string;
+  utilityLinks: NavLink[];       // 유틸리티 링크(이용안내·찾아오시는 길 등)
+  policyLinks: NavLink[];        // 정책 링크(개인정보처리방침·저작권 등)
+  snsLinks: NavLink[];
+  certMarks: AssetRef[];         // 웹접근성 품질인증 마크 등
+};
+
+type NavLink = { label: string; url: string };
 ```
 
 ### 3.7 모델 불변식 (Invariants)
@@ -185,7 +222,7 @@ type GlobalLayoutSettings = {
 2. **`path`는 파생 값**: 부모 노드 `slug`들을 `/`로 이어 자동 계산. 사용자는 `slug`만 입력. 부모 변경/순서변경 시 자손 `path` 재계산.
 3. **홈 노드는 정확히 1개**. `path = "/"`.
 4. **자산 바이너리는 IndexedDB에만** 존재. `Site` JSON에는 `blobKey` 참조만.
-5. **헤더/푸터는 사이트 전역 1벌**. 페이지별로 따로 두지 않음.
+5. **글로벌 요소는 사이트 전역 1벌**. KRDS 글로벌 요소 = 헤더·푸터·공식 배너(마스트헤드)·운영기관 식별자·건너뛰기 링크. 페이지별로 따로 두지 않음. 공식 배너(마스트헤드)는 헤더와 **별도 요소**이며 스크롤 고정에서 제외된다.
 
 ---
 
@@ -196,17 +233,19 @@ type GlobalLayoutSettings = {
 ```
 src/registry/
   index.ts                 // Map<id, ComponentDefinition>로 모아서 export
-  categories.ts            // 카테고리 메타(아이덴티티/탐색/액션 등)
+  categories.ts            // 카테고리 메타(KRDS 공식 11종: 아이덴티티/탐색/레이아웃 및 표현/액션/선택/피드백/도움/입력/설정/콘텐츠/모바일)
   types.ts                 // ComponentDefinition 등 타입
   components/
-    header.tsx
-    footer.tsx
-    page-title.tsx
-    button.tsx
-    image.tsx
-    card.tsx
-    table.tsx
-    input-form.tsx
+    header.tsx        // KRDS 표준(아이덴티티)
+    footer.tsx        // KRDS 표준(아이덴티티)
+    page-title.tsx    // ⚠ KRDS 비표준 — 페이지 제목은 시맨틱 헤딩+타이포 토큰 처리. 자체 컴포넌트로 명시
+    button.tsx        // KRDS 표준(액션)
+    image.tsx         // KRDS 표준(레이아웃 및 표현)
+    card.tsx          // ⚠ KRDS 비표준 — 가장 근접 공식 컴포넌트는 구조화 목록(Structured list). 자체 컴포넌트로 명시
+    table.tsx         // KRDS 표준(레이아웃 및 표현)
+    input-form.tsx    // 단일 컴포넌트 아님 — 입력 카테고리(텍스트입력/텍스트영역/셀렉트/체크박스/라디오) 조합 폼
+    masthead.tsx      // KRDS 표준(아이덴티티) — 공식 배너, 전역 요소(스크롤 고정 제외)
+    skip-link.tsx     // KRDS 표준(탐색) — 건너뛰기 링크, 접근성 필수
   patterns/                // 기본 패턴 = ComponentInstance[] 생성 팩토리
     input-form.ts
   service-patterns/        // 서비스 패턴 = 페이지 초기 components[] 템플릿
@@ -267,9 +306,33 @@ type ComponentDefinition = {
 
 ### 4.4 기본 패턴 / 서비스 패턴
 
-- **기본 패턴**: `(): ComponentInstance[]` 팩토리. 드롭하면 여러 인스턴스로 펼쳐져 각각 개별 편집 가능(기획서 4.2.3).
-- **서비스 패턴**: 새 페이지 생성 시 `page.components`를 채우는 템플릿. 사용자 여정 기반 구조(기획서 4.2.4).
-- MVP에서는 인터페이스만 확정하고 "입력 폼" 기본 패턴 1개 정도로 검증, 본격 확장은 2차.
+- **기본 패턴**: `(): ComponentInstance[]` 팩토리. 드롭하면 여러 인스턴스로 펼쳐져 각각 개별 편집 가능(기획서 4.2.3). KRDS 공식 기본 패턴 11종: 개인 식별 정보 입력·도움·동의·목록 탐색·사용자 피드백·상세 정보 확인·오류·입력폼·첨부 파일·필터링/정렬·확인.
+- **서비스 패턴**: 사용자 여정 기반 구조(기획서 4.2.4). KRDS 공식 서비스 패턴 5종: 방문·검색·로그인·신청·정책 정보 확인. ⚠ KRDS 서비스 패턴은 **단일 페이지가 아니라 다단계 여정**(예: 신청 = 개요→대상 탐색→…→확인·확정). 따라서 "한 페이지 초기 `components` 1벌" 모델로는 부족하며, **여정 단계(step)별 페이지 템플릿 시퀀스**(한 서비스 패턴이 복수 페이지를 생성)로 모델링해야 한다.
+- MVP에서는 인터페이스만 확정하고 "입력폼" 기본 패턴 1개 정도로 검증, 본격 확장은 2차.
+
+```ts
+// 기본 패턴: 한 페이지 안에 펼쳐지는 컴포넌트 인스턴스 묶음
+type BasicPattern = {
+  id: string;
+  name: string;                  // 예: "입력폼"
+  build: () => ComponentInstance[];
+};
+
+// 서비스 패턴: 다단계 여정 → 복수 페이지를 생성하는 시퀀스
+type ServicePatternStep = {
+  title: string;                 // 단계명 (예: "신청 대상 탐색")
+  slug: string;                  // 페이지 slug (path는 사이트맵 규칙으로 파생)
+  build: () => ComponentInstance[]; // 해당 단계 페이지의 초기 components
+};
+
+type ServicePattern = {
+  id: string;
+  name: string;                  // 방문·검색·로그인·신청·정책 정보 확인
+  steps: ServicePatternStep[];   // 단일 단계여도 배열(여정 다단계성 보존)
+};
+// 적용 시: steps → 사이트맵 노드 + 페이지를 순서대로 생성(불변식 1·2 적용).
+// MVP는 타입만 확정, 카탈로그 본문(11/5종)은 2차에 채움.
+```
 
 ---
 
@@ -333,19 +396,20 @@ type EditorState = {
 - 선택 페이지의 컴포넌트를 order순으로 React 미리보기 렌더.
 - 컴포넌트 선택 → 우측 패널 활성화. 위/아래 이동·복제·삭제·숨김 조작 핸들.
 - 빈 페이지 안내: "좌측의 컴포넌트 또는 기본 패턴을 이 영역으로 드래그하여 페이지를 구성하세요."
-- 캔버스 컨테이너에 `data-theme`(모드) + 폭 제약(디바이스) 적용.
+- 캔버스 컨테이너에 `data-krds-mode`(모드: 선명=`high-contrast`, 시스템=`theme`; 라이트는 속성 없음) + 폭 제약(디바이스) 적용.
 
 ### 6.4 우측 설정 패널 (selection별)
 
 | selection | 폼 내용 |
 |---|---|
 | site | 사이트명·설명·운영기관·로고·기본 모드·연락처·저작권·링크 (기획서 4.4-1) |
-| header | 로고/사이트명/배너/검색/전체메뉴/고정/로그인 표시 여부 (4.4-2) |
-| footer | 운영기관·주소·전화·이메일·저작권·링크·SNS·인증마크 (4.4-3) |
+| header | 서비스 아이덴티티(로고/사이트명)·유틸리티 링크 그룹·검색·전체메뉴·고정·로그인/회원가입/개인메뉴·건너뛰기 링크 (4.4-2) ※공식 배너(마스트헤드)는 헤더와 별도 전역 요소 |
+| masthead | 공식 배너 표시 여부 (정부 식별 배너, 스크롤 고정 제외) — 전역 요소 |
+| footer | 서비스 로고·운영기관 식별자·주소·전화·저작권·유틸리티 링크·정책 링크·SNS·웹접근성 인증마크 (4.4-3) ※이메일은 KRDS 비표준(선택) |
 | page | 제목·URL·상위메뉴·노출·SEO·브레드크럼·목차·개별 다운로드 (4.4-4) |
 | component | 해당 정의의 `editableProps`에서 **자동 생성된 폼** (4.4-5) |
 
-**설계 원칙**(기획서 4.3): 개발 용어 대신 쉬운 한국어, 변경 즉시 미리보기 반영, URL 검증, 이미지 alt 필수, 필수값 표시, 오류 안내.
+**설계 원칙**(기획서 4.3): 개발 용어 대신 쉬운 한국어, 변경 즉시 미리보기 반영, 링크 텍스트 명료성(링크 목적 설명)+URL 형식 검증, 이미지 alt(장식용 제외) 필수, 필수값 표시, 오류 안내.
 
 ---
 
@@ -362,7 +426,7 @@ Site(JSON) ──▶ [Generator] ──▶ 가상 파일맵 { path: string => co
 
 - 세 생성기 모두 같은 `Site`를 읽고 각 컴포넌트의 `exportTemplates[framework]`를 호출.
 - **페이지 조립** = 공통 헤더 + `components`(order순, hidden 제외) + 공통 푸터.
-- **KRDS 테마**: `krds-theme.css`를 전 결과물에 포함, 사용자 설정은 `style.css` 변수 오버라이드.
+- **KRDS 테마**: `krds_tokens.css`(+ 컴포넌트 CSS, 또는 `cdn/krds.min.css` 번들)를 전 결과물에 포함, 사용자 설정은 `style.css` 변수 오버라이드.
 
 ### 7.2 프레임워크별 산출물 (기획서 6.1 구조)
 
@@ -384,22 +448,23 @@ Site(JSON) ──▶ [Generator] ──▶ 가상 파일맵 { path: string => co
 
 ### 8.1 화면 모드 (기획서 8.1)
 
-- 기본(light) / 선명한 화면(high-contrast) / 시스템.
-- CSS 변수 + `data-theme` 토글로 미리보기·익스포트 공통 처리.
+- 기본(light) / 선명한 화면(high-contrast) / 시스템. KRDS UI 라벨은 "기본 / 선명하게 / 시스템 설정", 페이지명은 "선명한 화면 모드(High contrast mode)". 선명 모드는 시각적으로 **어두운 배경**을 쓰지만 목적은 **고대비**(다크모드와 다름) — 명도대비를 기본보다 강화(본문 7:1→15:1 등).
+- CSS 변수 + `data-krds-mode` 속성 토글로 미리보기·익스포트 공통 처리. 값: 선명=`high-contrast`, 시스템=`theme`(+`@media (prefers-color-scheme: dark)`), 라이트=속성 없음. ※속성명 출처는 **KRDS 배포 자산 분석**(`common.css`) — 공식 사이트 콘텐츠에는 미기재.
 - 다크/선명 모드 식별 곤란 이미지는 `darkVariantId`로 대체.
-- SVG 아이콘은 색상 토큰(`currentColor`/CSS 변수)으로 모드 자동 대응.
+- SVG 아이콘은 CSS `mask-image` + `background-color` 색상 토큰으로 그리고, `[data-krds-mode]` 속성이 모드별 변수(`--krds-light-*`/`--krds-high-contrast-*`)를 적용해 자동 대응. (KRDS는 `currentColor`를 쓰지 않음 — 자체 인라인 SVG+currentColor를 쓸 경우 "KRDS 비호환 자체 방식"으로 명시.)
 
 ### 8.2 반응형 (기획서 8.2)
 
 - PC/태블릿/모바일 미리보기 전환(캔버스 폭 제약).
+- KRDS 브레이크포인트: `small(360~)` / `medium(768~)` / `large(1024~)` / `xlarge(1280~)`. 디바이스 매핑 — 모바일=360~768, 태블릿=medium(768~1024), PC=1024~. 콘텐츠 최대폭 **1200px**, 화면 마진 모바일 16px / PC 24px.
 - 헤더 메뉴는 모바일에서 햄버거/전체메뉴로 전환.
 - 표·카드·검색결과는 모바일 재배치.
 
 ### 8.3 접근성 (기획서 7-6)
 
-- 이미지 alt 입력 필수(미입력 시 경고).
-- URL 입력 검증, 링크 목적 명확화 필드.
-- 키보드 이동/초점 표시/색상 대비/오류 메시지 명확화.
+- 이미지 alt 입력 필수(장식용 이미지 제외; 미입력 시 경고).
+- 링크 텍스트 명료성(링크 목적 설명) 우선 + URL 형식 검증. 준수 기준: **KWCAG 2.2 / WCAG 2.1**.
+- 키보드 이동/초점 표시/색상 대비/오류 메시지 명확화/키보드 트랩 방지.
 - 3차에서 자동 점검(대비 경고·alt 누락 경고·SEO 점검)으로 확장.
 
 ---
@@ -415,7 +480,7 @@ Site(JSON) ──▶ [Generator] ──▶ 가상 파일맵 { path: string => co
 | 사이트맵 | 트리 CRUD/순서변경(dnd-kit), slug→path 자동 |
 | 페이지 편집 | 선택, 캔버스 DnD 배치, 순서/복제/삭제/숨김 |
 | 헤더·푸터 | 공통 설정, 전 페이지 적용 |
-| 컴포넌트 8종 | 헤더·푸터·제목영역·버튼·이미지·카드·표·입력폼 |
+| 컴포넌트 10종 | KRDS 표준: 헤더·푸터·**마스트헤드**·**건너뛰기 링크**·버튼·이미지·표 / KRDS 비표준(자체): 제목영역·카드 / 조합: 입력폼(입력 카테고리 조합) |
 | 우측 패널 | `editableProps` 자동 폼 + 실시간 반영 |
 | 미리보기 | 라이트/선명 모드 + PC/태블릿/모바일 |
 | 다운로드 | **HTML 전체 사이트** ZIP |
@@ -436,7 +501,7 @@ Site(JSON) ──▶ [Generator] ──▶ 가상 파일맵 { path: string => co
 
 ```
 0. 셋업: Next.js+TS+정적export, KRDS 자산 다운로드/배치
-   → 검증: dev 서버 기동 + krds-theme.css 변수 로드 확인
+   → 검증: dev 서버 기동 + krds_tokens.css 변수 로드 확인
 1. 데이터 모델 + Zustand store + IndexedDB 영속화
    → 검증: 새 Site 생성→새로고침→복원 테스트 통과
 2. 컴포넌트 레지스트리 골격 + 8개 정의(Preview + html 템플릿)
@@ -463,7 +528,7 @@ Site(JSON) ──▶ [Generator] ──▶ 가상 파일맵 { path: string => co
 - **React Hook Form + Zod** (스키마 기반 폼/검증)
 - **localforage** (IndexedDB 영속화)
 - **JSZip + FileSaver** (다운로드)
-- **CSS 변수 기반 KRDS theme.css** (라이트/선명 모드 전환)
+- **CSS 변수 기반 KRDS `krds_tokens.css`** (라이트/선명 모드 전환, `data-krds-mode` 토글)
 - 테스트: Vitest + React Testing Library (스냅샷/유닛)
 
 ---
@@ -485,3 +550,42 @@ Site(JSON) ──▶ [Generator] ──▶ 가상 파일맵 { path: string => co
 13. 복잡한 개발자 기능보다 쉬운 제작 경험 우선.
 
 UI 문구는 모두 한국어.
+
+---
+
+## 13. KRDS 공식 사이트 대조 검증 (2026-06-25)
+
+`www.krds.go.kr` 공식 콘텐츠 + 배포 자산(`KRDS-uiux/krds-uiux` v1.1.0, `vendor/krds/`)을 영역별로 정독해 본 문서를 대조했다. 아래는 그 결과 **수정 완료한 사실 오류**(13.1)와 **결정 완료·반영한 설계 판단 항목**(13.4)이다.
+
+### 13.1 검증으로 수정 완료 (사실 오류)
+
+| # | 항목 | 수정 전 → 수정 후 | 근거 |
+|---|---|---|---|
+| 1 | 모드 전환 속성 | `data-theme` → **`data-krds-mode`** (선명=`high-contrast`, 시스템=`theme`, 라이트=속성 없음) | 배포 자산 `common.css`. 공식 사이트 콘텐츠엔 미기재 |
+| 2 | 테마 파일명 | `krds-theme.css` → **`krds_tokens.css`** (언더스코어, `--krds-*`) | 저장소에 `krds-theme.css` 부재, 실제 토큰 파일 확인 |
+| 3 | 아이콘 모드 대응 | `currentColor` → **`mask-image`+`background-color` 색상 토큰 + `[data-krds-mode]` 변수 전환** | `common.css`에 `currentColor` 전혀 없음 |
+| 4 | 접근성 alt | "alt 필수" → **"장식 이미지 제외 필수"** | 디지털 포용 페이지(KWCAG 2.2/WCAG 2.1) |
+| 5 | 접근성 링크 | "URL 검증" → **"링크 텍스트 명료성 + URL 형식 검증"** | KRDS는 링크 텍스트가 목적지 설명하도록 요구 |
+| 6 | 카테고리 | 공식 **11종** 명시(아이덴티티/탐색/레이아웃 및 표현/액션/선택/피드백/도움/입력/설정/콘텐츠/모바일) | 컴포넌트 요약 페이지 |
+| 7 | 반응형 | KRDS 브레이크포인트 구체값(small 360/medium 768/large 1024/xlarge 1280, 콘텐츠 최대 1200px, 마진 16/24) 명시 | 레이아웃 스타일 페이지 |
+| 8 | 패턴 카탈로그 | 기본 패턴 **11종**·서비스 패턴 **5종** 고정 목록 명시 | 기본/서비스 패턴 소개 페이지 |
+| 9 | 폰트 크기 | `baseFontSize` 의미 명확화(본문 17px / rem 루트 10px=62.5%) | 타이포그래피 페이지 |
+
+### 13.2 확정 일치 (변경 불필요)
+
+- 화면 모드 3종(`light`/`high-contrast`/`system`) 모델링 — KRDS "기본/선명하게/시스템 설정"과 정확 대응. **"선명한 화면=High contrast"는 KRDS 페이지 제목 그대로**(시각적으로 어두운 배경이나 목적은 고대비, 다크모드와 다름).
+- 토큰 3계층(프리미티브/시멘틱/컴포넌트) 구조.
+- 글로벌 요소 전역 1벌 원칙.
+- 표(Table)를 단일 컴포넌트로 본 것.
+- 디자인 원칙은 KRDS 공식 7종.
+
+### 13.3 토큰 구조 정밀 확인 (자산 전수 비교)
+
+- 프리미티브 팔레트는 `--krds-color-light-*` / `--krds-color-high-contrast-*`로 **변수명이 분리**돼 있고, 107쌍 중 **secondary 11단계만 값이 모드별로 다르고** 나머지(primary·gray 등)는 값이 동일. → "프리미티브가 모드별로 값이 전부 다르다"는 오해 금지. 모드 분기는 **주로 시멘틱 레벨**(예: `surface-gray-subtler` = 라이트 gray-5 / 선명 gray-95)에서 발생.
+
+### 13.4 설계 판단 — 결정 완료·반영 (2026-06-25)
+
+1. **MVP 컴포넌트 범위 → 10종으로 확대**: 기존 8종 유지(`제목영역`·`카드`는 KRDS 비표준 자체 컴포넌트로 명시) + **마스트헤드(공식 배너)·건너뛰기 링크** 추가. (4.1 레지스트리, 9.1 MVP 표 반영)
+2. **마스트헤드 → 별도 전역 요소**: `GlobalLayoutSettings.masthead`(`MastheadSettings`)로 헤더와 분리, 스크롤 고정 제외 속성 보유. (3.6, 6.4 반영)
+3. **서비스 패턴 멀티스텝 → 타입 지금 확정**: `ServicePattern.steps[]`(여정 단계별 페이지 시퀀스)로 모델. 카탈로그 본문(11/5종)은 2차. (4.4 타입 반영)
+4. **헤더/푸터 입력 항목 → 지금 반영**: `HeaderSettings`(유틸리티 링크·검색·전체메뉴·고정·로그인/회원가입/개인메뉴), `FooterSettings`(서비스 로고·운영기관 식별자·`이메일` 선택 강등·유틸리티/정책 링크 분리·SNS·인증마크), `skipLink`. (3.6 타입 반영)
