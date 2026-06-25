@@ -1,0 +1,98 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`컴포넌트 HTML 익스포트 스냅샷 > button — 기본 마크업 1`] = `"<button type="button" class="krds-btn">버튼</button>"`;
+
+exports[`컴포넌트 HTML 익스포트 스냅샷 > card — 기본 마크업 1`] = `
+"<ul class="krds-structured-list type-full">
+	<li class="structured-item">
+		<div class="in">
+			<div class="card-body">
+				<a href="#" class="c-text">
+					<p class="c-tit"><span class="span">카드 제목</span></p>
+					<p class="c-txt">간단한 설명이 들어가는 영역입니다.</p>
+				</a>
+			</div>
+		</div>
+	</li>
+</ul>"
+`;
+
+exports[`컴포넌트 HTML 익스포트 스냅샷 > footer — 기본 마크업 1`] = `
+"<footer id="krds-footer">
+	<div class="inner">
+		<div class="f-info">
+			<p class="f-org"></p>
+		</div>
+		<p class="f-copy"></p>
+	</div>
+</footer>"
+`;
+
+exports[`컴포넌트 HTML 익스포트 스냅샷 > header — 기본 마크업 1`] = `
+"<header id="krds-header">
+	<div class="inner">
+		<h1 class="logo"><a href="/"></a></h1>
+		<nav class="gnb-menu" aria-label="주메뉴">
+			<ul class="gnb-main-list">
+			</ul>
+		</nav>
+		<div class="gnb-utils">
+			<button type="button" class="btn-search">통합검색</button>
+			<a href="#" class="krds-btn text">로그인</a>
+			<a href="#" class="krds-btn text">회원가입</a>
+			<button type="button" class="btn-all">전체메뉴</button>
+		</div>
+	</div>
+</header>"
+`;
+
+exports[`컴포넌트 HTML 익스포트 스냅샷 > image — 기본 마크업 1`] = `"<img src="" alt="">"`;
+
+exports[`컴포넌트 HTML 익스포트 스냅샷 > input-form — 기본 마크업 1`] = `
+"<div class="form-group">
+	<div class="form-tit">
+		<label for="field1">레이블</label>
+	</div>
+	<div class="form-conts">
+		<input type="text" id="field1" class="krds-input" placeholder="플레이스홀더">
+	</div>
+	<p class="form-hint">도움말</p>
+</div>"
+`;
+
+exports[`컴포넌트 HTML 익스포트 스냅샷 > masthead — 기본 마크업 1`] = `
+"<div id="krds-masthead">
+	<div class="toggle-wrap">
+		<div class="toggle-head">
+			<div class="inner">
+				<span class="nuri-txt">이 누리집은 대한민국 공식 전자정부 누리집입니다.</span>
+			</div>
+		</div>
+	</div>
+</div>"
+`;
+
+exports[`컴포넌트 HTML 익스포트 스냅샷 > page-title — 기본 마크업 1`] = `
+"<div class="page-title-area">
+	<h2>제목을 입력하세요</h2>
+</div>"
+`;
+
+exports[`컴포넌트 HTML 익스포트 스냅샷 > skip-link — 기본 마크업 1`] = `
+"<div id="krds-skip-link">
+	<a href="#main">본문 바로가기</a>
+</div>"
+`;
+
+exports[`컴포넌트 HTML 익스포트 스냅샷 > table — 기본 마크업 1`] = `
+"<div class="krds-table-wrap">
+	<table class="tbl col data">
+		<caption>표 제목</caption>
+		<thead><tr><th scope="col">제목1</th><th scope="col">제목2</th></tr></thead>
+		<tbody>
+		<tr><th scope="row">제목1-1</th><td>내용이 들어갑니다.</td></tr>
+		<tr><th scope="row">제목1-2</th><td>내용이 들어갑니다.</td></tr>
+		</tbody>
+	</table>
+</div>"
+`;
