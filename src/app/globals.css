@@ -1,0 +1,18 @@
+/* 빌더 앱 셸 스타일. KRDS 리셋/타이포는 common.css가 담당하므로 최소만 둔다. */
+/* 주의: 색/타이포 토큰은 krds_tokens.css(--krds-*)가 단일 출처. 여기서 재정의하지 않는다. */
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  /* KRDS 기본 폰트(Pretendard GOV). 실제 본문 크기/색은 KRDS 토큰·common.css가 적용. */
+  font-family: "Pretendard GOV", -apple-system, BlinkMacSystemFont, system-ui,
+    "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+}
+
+#krds-editor-root {
+  min-height: 100%;
+}

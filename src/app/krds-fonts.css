@@ -1,0 +1,23 @@
+/* KRDS 기본 폰트 Pretendard GOV (정부 서브셋). 자산: public/krds/fonts/ */
+/* KRDS 메인 CSS에는 @font-face가 없어(외부 폰트 로드 전제) 여기서 정의한다. */
+@font-face {
+  font-family: "Pretendard GOV";
+  font-weight: 400;
+  font-display: swap;
+  src: url("/krds/fonts/PretendardGOV-Regular.subset.woff2") format("woff2"),
+    url("/krds/fonts/PretendardGOV-Regular.subset.woff") format("woff");
+}
+@font-face {
+  font-family: "Pretendard GOV";
+  font-weight: 500;
+  font-display: swap;
+  src: url("/krds/fonts/PretendardGOV-Medium.subset.woff2") format("woff2"),
+    url("/krds/fonts/PretendardGOV-Medium.subset.woff") format("woff");
+}
+@font-face {
+  font-family: "Pretendard GOV";
+  font-weight: 700;
+  font-display: swap;
+  src: url("/krds/fonts/PretendardGOV-Bold.subset.woff2") format("woff2"),
+    url("/krds/fonts/PretendardGOV-Bold.subset.woff") format("woff");
+}
