@@ -1,6 +1,6 @@
 # 작업 인수인계 (이어서 진행용)
 
-- 최종 업데이트: 2026-06-26 (사이트맵 트리 UI/UX 개편 4-4 **완료** 반영)
+- 최종 업데이트: 2026-06-26 (카테고리 메뉴 4-5 **완료** 반영)
 - 저장소: `git@github.com:joy970214/KRDSmake.git` (브랜치 `master`)
   ⚠️ 로컬 master가 origin보다 **앞섬(push 안 됨)** — Step4~4-3 커밋들 미푸시
 - 프로젝트: KRDS 기반 공공 웹사이트 빌더 (노코드, 정적 export)
@@ -27,14 +27,22 @@
 | **4-2** | **가로 다단 레이아웃 (사용자 보고 #3)** — TDD 1~8단계 + 실브라우저 검증 완료 | ✅ |
 | **4-3** | **페이지 좌측 사이드바(LNB)** — 사이트맵 자동파생 + 페이지별 토글 + 그리드 1200px 이전 | ✅ |
 | **4-4** | **사이트맵 트리 UI/UX 개편** — DnD 재배치 + 활성강조 + 호버액션 + 추가즉시편집/slug자동 | ✅ |
+| **4-5** | **카테고리 메뉴(섹션 랜딩)** — isCategory 토글 + 카테고리 제목클릭→첫 하위 콘텐츠로 라우팅 | ✅ |
 | 5 | 우측 설정 패널 자동 폼(RHF+Zod) + 실시간 반영 (RHF/Zod 미설치 확인됨) | ⬜ **다음** |
 | 6 | 테마(라이트/선명/시스템) + 디바이스 전환 | ⬜ |
 | 7 | HTML 익스포트 + ZIP 다운로드 | ⬜ |
 
-- 테스트: **157개 통과**(25 파일) · lint 0 · tsc 0 · static export 빌드 성공
+- 테스트: **168개 통과**(25 파일) · lint 0 · tsc 0 · static export 빌드 성공
 - 화면 확인됨: 3패널 에디터 + 팔레트→캔버스 배치/선택/복제/순서변경, **가로 다단(2~4단) 배치**,
-  **좌측 LNB [사이드바|본문] 2칼럼**, **사이트맵 트리 DnD 재배치/활성강조/호버액션**
-  (scratchpad `f65ad225`: layout-result.png, lnb-desktop.png, tree-dnd.png)
+  **좌측 LNB [사이드바|본문] 2칼럼**, **사이트맵 트리 DnD 재배치/활성강조/호버액션**, **카테고리 토글/배지**
+  (scratchpad `f65ad225`: layout-result.png, lnb-desktop.png, tree-dnd.png, category.png)
+
+### 4-5. 카테고리 메뉴(섹션 랜딩) — 한 것 / 후속
+- 설계 `docs/superpowers/specs/2026-06-26-category-menu-design.md`, 계획 `…/plans/2026-06-26-category-menu.md`. 커밋 `a91ad9e`(isCategory+resolveTargetPageId)·`19ee712`(setNodeCategory)·`b9ada46`(트리 UI).
+- **모델**: `SitemapNode.isCategory?`(1:1 불변식 유지 — 카테고리 노드도 페이지 보유, 직접 안 보임).
+- **순수** `lib/sitemap.ts resolveTargetPageId(sitemap, nodeId)`: 카테고리면 **전위 탐색으로 첫 비-카테고리 하위** pageId(체인 관통), 없으면 자기로 폴백, 없는 노드는 입력 반환.
+- **store** `setNodeCategory(id, isCategory)`. **UI**: 트리 행에 카테고리 토글(🗂, **하위 있는 노드에만**, `aria-pressed`) + "카테고리" 배지. 카테고리 노드 **제목 클릭 → `resolveTargetPageId`로 첫 하위 콘텐츠 페이지 활성화**.
+- ⚠️ **후속**: 익스포트(Step 7)에서 카테고리 페이지 = 첫 하위로 HTML 리다이렉트 배선 / 브레드크럼·캔버스에서 카테고리 별도 표현.
 
 ### 4-4. 사이트맵 트리 UI/UX 개편 — 한 것 / 후속
 - 설계 `docs/superpowers/specs/2026-06-26-sitemap-tree-ux-design.md`, 계획 `…/plans/2026-06-26-sitemap-tree-ux.md`. 커밋 `50c0f2a`(flatten/slugify)·`5a2ebbe`(getProjectedDrop)·`bac1a1a`(트리 재작성)·`a8091f8`(DnD).
