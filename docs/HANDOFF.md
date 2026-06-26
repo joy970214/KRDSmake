@@ -1,13 +1,14 @@
 # 작업 인수인계 (이어서 진행용)
 
-- 최종 업데이트: 2026-06-26 (카테고리 메뉴 4-5 **완료** 반영)
+- 최종 업데이트: 2026-06-26 (4-2~4-5 완료 반영 — 다단 레이아웃·LNB·트리 UX·카테고리 메뉴)
 - 저장소: `git@github.com:joy970214/KRDSmake.git` (브랜치 `master`)
-  ⚠️ 로컬 master가 origin보다 **앞섬(push 안 됨)** — Step4~4-3 커밋들 미푸시
+  ✅ **origin/master와 동기화됨**(이번 세션 작업 전부 push 완료, `b7f1d3c` 기준).
 - 프로젝트: KRDS 기반 공공 웹사이트 빌더 (노코드, 정적 export)
 
 > **재개 시 다음 작업 = Step 5(우측 설정 패널 자동 폼). §4 참조.**
-> 4-2(가로 다단 레이아웃)·4-3(좌측 LNB) 완료 + 실브라우저 검증 끝남(§4-2, §4-3 참조).
-> ⚠️ Step 5 착수 전 먼저 볼 것: §4-2의 `updateComponentProps` 재귀화 + §4-3의 토글 Step5 이전.
+> 이번 세션 완료: 4-2(가로 다단 레이아웃)·4-3(좌측 LNB)·4-4(사이트맵 트리 UX 개편)·4-5(카테고리 메뉴),
+> 모두 TDD + 실브라우저 검증 끝남(§4-2~§4-5 참조).
+> ⚠️ **Step 5 착수 전 체크리스트는 §4 하단에 모아둠** — 먼저 읽을 것.
 
 ---
 
@@ -77,8 +78,10 @@ npm run lint       # eslint
 
 ### 외부에서 화면 보기 (현재 띄워둔 서버)
 
-- 정적 빌드를 `serve`로 `http://172.213.188.161:17200` 서빙 중.
-- 코드 바꾼 뒤 반영하려면: `npm run build` (serve가 out/을 라이브로 읽음).
+- 정적 빌드를 `serve`가 `0.0.0.0:17200`에서 서빙 중(머신 로컬 IP는 내부망 192.168.x — 외부 접속은
+  NAT/포트포워딩 주소로, 사용자는 `http://175.213.188.161:17200`로 접속). 포워딩이 이 머신 `:17200`을
+  가리키면 됨. 화면이 안 바뀌면 포워딩 대상 포트/머신부터 확인.
+- 코드 바꾼 뒤 반영하려면: `npm run build` (serve가 out/을 라이브로 읽음) + 브라우저 강력 새로고침.
 - 서버 재기동: `npx serve out -l tcp://0.0.0.0:17200`
 - 중지: `pkill -f 'serve out'`
 - ⚠️ **HTTP+외부IP = 비보안 컨텍스트**. `crypto.randomUUID`·`crypto.subtle`·
@@ -95,9 +98,12 @@ src/
     editor.css          # 3패널 레이아웃 스타일(KRDS 토큰)
     globals.css, krds-fonts.css
   lib/
-    types.ts            # 도메인 모델(Site/SitemapNode/Page/ComponentInstance/…)
+    types.ts            # 도메인 모델(Site/SitemapNode{isHome?,isCategory?}/Page{showSidebar?}/ComponentInstance{columns?}/…)
     ids.ts              # newId() — 비보안 컨텍스트 폴백 포함
-    sitemap.ts          # joinPath, recomputePaths(slug→path·order 파생)
+    sitemap.ts          # joinPath, recomputePaths, resolveTargetPageId(카테고리→첫 하위, 4-5)
+    lnb.ts              # buildLnb(사이트맵→좌측 LNB 파생, 4-3)
+    tree-dnd.ts         # flattenTree/slugify/getProjectedDrop(사이트맵 트리 DnD, 4-4)
+    dnd-plan.ts         # planDrop(캔버스 드롭 라우팅 + 칼럼 add-to-column, 4-2)
     site-factory.ts     # createSite(홈노드+1:1페이지)
     persistence.ts      # localforage save/load/clear (IndexedDB)
   store/
@@ -115,7 +121,7 @@ src/
     Canvas.tsx          # 중앙 — KRDS 미리보기 + 드롭 타깃 + 인스턴스 선택/조작 툴바
     left/
       LeftPanel.tsx     # 사이트맵/컴포넌트 탭
-      SitemapTree.tsx   # 사이트맵 트리 CRUD/순서변경
+      SitemapTree.tsx   # 사이트맵 트리 — DnD 재배치/활성강조/호버액션/인라인편집/카테고리 토글(4-4,4-5)
       ComponentPalette.tsx # draggable 카드(배치가능 6종만; 전역요소 제외)
 ```
 
@@ -146,18 +152,25 @@ src/
 주의: `EditablePropType`에 repeater/table/image 등 복합 타입 있음 → MVP는 단순 타입
 (text/textarea/url/number/select/radio/checkbox)부터, 복합은 후속.
 
-## 4-2. ★ 사용자 보고 이슈 & 다음 작업: 가로 다단 레이아웃 (최우선)
+### ⚠️ Step 5 착수 전 체크리스트 (이번 세션 작업에서 누적된 선결 항목)
+1. **`updateComponentProps` 재귀화** [§4-2]: 현재 최상위 인스턴스만 탐색 → 다단 레이아웃 **칼럼 안 자식**의
+   props를 우측 폼으로 편집하려면 칼럼까지 재귀해야 함(`removeFromList` 패턴 참고). `toggleHidden`/
+   `duplicateComponent`/`reorderComponent`도 동일하게 최상위 전용임(필요 시 함께).
+2. **LNB "사이드바 표시" 토글 이전** [§4-3]: 캔버스 상단의 임시 토글(`Page.showSidebar`)을 Step 5 우측
+   폼의 페이지 설정 필드로 옮길 것.
+3. **전역요소 선택 진입점** [위 3번]: 헤더/푸터/마스트헤드는 팔레트에 없음 → `Selection`에
+   `{kind:'global', target:...}` 추가해 우측 폼에서 편집.
 
-사용자가 캔버스를 써보고 보고한 4가지 → 현재 상태:
+## 4-2. 가로 다단 레이아웃 — ✅ 완료 (참고용 설계 기록)
+
+사용자 보고 4가지 → 현재 상태:
 
 | # | 보고 | 상태 |
 |---|---|---|
 | 1 | 드래그로 위아래 순서변경 안 됨 | ✅ 해결 — 인스턴스 드래그 핸들 `⠿` + dnd-kit sortable (`Canvas.tsx`) |
 | 2 | 드롭한 위치 무시하고 맨 아래 배치 | ✅ 해결 — 드롭 위치 삽입 (커밋 `028a950`) |
-| 3 | **레이아웃이 1단(세로 1열)만 됨 = "가로 갈래"** | ⬜ **다음 작업** |
+| 3 | **레이아웃이 1단(세로 1열)만 됨 = "가로 갈래"** | ✅ 해결 — 다단 레이아웃 블록(4-2, 아래) |
 | 4 | 컴포넌트 종류 적음 | ⬜ 백로그(배치가능 6종: 버튼/카드/이미지/입력폼/제목영역/표. 전역 4종 제외) |
-
-**#3이 사용자가 말한 "레이아웃 관련" 작업.** 첫 메시지 "가로 갈래"도 이것(가로 다단 배치).
 
 ### KRDS 레이아웃 근거 (사용자가 지정한 출처)
 출처: https://www.krds.go.kr/html/site/style/style_05.html (사용자가 직접 링크 제공 — 이 기준 준수)
@@ -201,11 +214,9 @@ src/
 > ⚠️ scratchpad 스크립트는 ESM이라 `playwright` resolve 위해 **프로젝트 루트에서 실행**해야 함
 > (scratchpad에서 직접 `node`는 `ERR_MODULE_NOT_FOUND`). 루트에 복사 후 실행·삭제했음.
 
-#### ⚠️ Step 5 착수 전 반드시 처리할 후속 (이번 작업에서 발견)
-- **`updateComponentProps`/`toggleHidden`/`duplicateComponent`/`reorderComponent`는 아직 최상위
-  컴포넌트만 탐색**한다. 칼럼 안 자식(child)에는 닿지 않음. Step 5 우측 폼이 칼럼 자식의 props를
-  편집하려면 `updateComponentProps`를 **재귀화**해야 함(`removeFromList` 패턴 참고). 칼럼 자식
-  툴바는 현재 의도적으로 "삭제"만 노출(재귀 제거는 됨). 선택(`selectComponent`)도 자식 id로 정상 동작.
+#### ⚠️ Step 5 선결: `updateComponentProps` 재귀화
+→ §4 하단 "Step 5 착수 전 체크리스트" 1번 참조. (칼럼 안 자식 props 편집을 위해 재귀 필요.
+선택 `selectComponent`/재귀 제거 `removeComponent`는 자식 id로 이미 정상 동작. 칼럼 자식 툴바는 현재 "삭제"만 노출.)
 
 #### MVP에서 의도적으로 뺀 것(후속/백로그)
 - 칼럼 **내부** 자식 순서변경 / 칼럼 간 이동(드래그) — MVP는 "드롭해 배치 + 제거"까지. 재정렬은 후속.
@@ -244,7 +255,8 @@ src/
 
 ## 6. 미해결 / 백로그
 
-- 사이트맵 트리 **드래그 앤 드롭**(현재 ↑↓ 버튼) — 폴리시로 남김.
+- ~~사이트맵 트리 드래그 앤 드롭~~ → ✅ 완료(4-4, 재배치 포함). 후속: 키보드 뎁스변경, 노드 접기.
+- 카테고리/LNB **익스포트 배선**(Step 7): 카테고리=첫 하위 리다이렉트, LNB 토글 펼침용 KRDS JS.
 - 헤더/푸터 익스포트는 **MVP 단순화 버전**(KRDS 459줄 헤더의 핵심 골격만). 추후 충실화.
 - 이미지 컴포넌트 등 자산 업로드(IndexedDB Blob) — 좌측 5번째 탭, 아직 없음(설계 §6.2).
 - KRDS `component.css`의 `img/img/` 경로 오타로 ico_flag 아이콘은 미사용 상태
