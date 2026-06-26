@@ -57,6 +57,7 @@ export type Page = {
   seoDescription?: string;
   showBreadcrumb: boolean;
   showInPageNavigation: boolean;
+  showSidebar?: boolean; // 좌측 LNB 표시. 미설정=켜짐(홈은 buildLnb가 null이라 자동 미표시)
   components: ComponentInstance[]; // order순 렌더
 };
 

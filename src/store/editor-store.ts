@@ -198,6 +198,7 @@ export type EditorState = {
   ) => void;
   selectComponent: (pageId: string, instanceId: string) => void;
   clearSelection: () => void;
+  setPageSidebar: (pageId: string, show: boolean) => void;
 };
 
 export type EditorStore = StoreApi<EditorState>;
@@ -456,6 +457,19 @@ export function createEditorStore(): EditorStore {
 
     selectComponent(pageId, instanceId) {
       set({ selection: { kind: "component", pageId, instanceId } });
+    },
+
+    setPageSidebar(pageId, show) {
+      const site = get().site;
+      if (!site) return;
+      set({
+        site: {
+          ...site,
+          pages: site.pages.map((p) =>
+            p.id === pageId ? { ...p, showSidebar: show } : p,
+          ),
+        },
+      });
     },
 
     clearSelection() {
