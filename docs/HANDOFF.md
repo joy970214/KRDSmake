@@ -37,6 +37,8 @@
 ### 4-3. 좌측 사이드바(LNB) — 한 것 / 설계근거 / 후속
 - 설계: `docs/superpowers/specs/2026-06-26-krds-page-sidebar-lnb-design.md`, 계획: `docs/superpowers/plans/2026-06-26-krds-page-sidebar-lnb.md`. 커밋 `c73fbf1`(buildLnb)·`31e245c`(showSidebar+액션)·`495ac1a`(Canvas+CSS).
 - **자동 파생**: `lib/lnb.ts buildLnb(sitemap, currentNodeId)` → 현재 페이지의 최상위 섹션 하위 트리를 LNB로, 현재 항목 강조. 홈/자식없는섹션/없는노드 → `null`(미표시).
+- **스타일 = KRDS 공식 사이드 메뉴**(component_03_04, 커밋 `32432b4`): `nav.krds-side-navigation > h2.lnb-tit + ul.lnb-list > li.lnb-item(.lnb-btn.lnb-toggle|lnb-link) > .lnb-submenu > li.lnb-subitem`. 스타일은 **벤더 output.css가 담당**(앱이 이미 로드) — 커스텀 LNB CSS 없음. 현재 페이지 가지를 `active`로 펼침(KRDS JS 없이 클래스로), 활성=`aria-current="page"`+`selected`. 4depth↑는 3depth 목록에 평면 합침(KRDS 권장 ≤2단).
+  - ⚠️ **익스포트(Step 7)**: 비활성 메뉴 토글 펼침/접힘 클릭은 KRDS JS(`vendor/krds/.../ui-script.js` 또는 `krds.min.js`)가 필요 — export HTML에 KRDS JS 배선 필요. 에디터 미리보기는 active 가지만 정적 펼침이라 JS 불필요.
 - **노출**: `Page.showSidebar?`(미설정=켜짐). 표시판정 `(showSidebar ?? true) && buildLnb≠null` → **홈 외 기본 켜짐**(홈은 buildLnb null로 자동 숨김). 토글=캔버스 상단 "사이드바 표시" 체크박스 → `setPageSidebar`.
 - **레이아웃**: 헤더/푸터 사이 `.page-frame`(max-width **1200px**·`margin:auto`·flex·gap24)에 `<aside.lnb>`(240px)+`<main.canvas-page>`. **1200px 제약을 `.krds-grid` 블록에서 `.page-frame`로 이전**(블록은 `width:100%`) → 사이드바로 본문 좁아져도 다단블록 정상. 모바일(<768px) 1단 스택(미디어쿼리).
 - **LNB는 읽기전용**(링크 preventDefault, ComponentInstance 아님 — 선택/드롭/익스포트 대상 아님).
