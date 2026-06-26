@@ -59,6 +59,9 @@ export type ComponentDefinition = {
   thumbnail: string; // 좌측 카드 썸네일 경로
   description: string;
   isKrdsStandard: boolean; // KRDS 공식 컴포넌트 여부(제목영역/카드는 false)
+  // 컨테이너(다단 레이아웃) 마커: 있으면 칼럼별 자식을 담는 컨테이너.
+  // columnCountProp = 단 수를 담는 defaultProps 키.
+  container?: { columnCountProp: string };
   variants: ComponentVariant[];
   defaultProps: Props;
   editableProps: EditablePropSchema[];

@@ -24,6 +24,8 @@ export type ComponentInstance = {
   order: number;
   hidden?: boolean;
   locked?: boolean;
+  // 컨테이너(다단 레이아웃) 전용: 칼럼별 자식 인스턴스. columns.length = 단 수.
+  columns?: ComponentInstance[][];
   responsive?: {
     desktop?: Record<string, unknown>;
     tablet?: Record<string, unknown>;

@@ -9,8 +9,9 @@ import { imageDefinition } from "./components/image";
 import { cardDefinition } from "./components/card";
 import { tableDefinition } from "./components/table";
 import { inputFormDefinition } from "./components/input-form";
+import { layoutDefinition } from "./components/layout";
 
-// MVP 10종. 컴포넌트 추가 = 파일 1개 + 이 배열에 등록(설계 §4.2).
+// MVP 11종. 컴포넌트 추가 = 파일 1개 + 이 배열에 등록(설계 §4.2).
 export const componentDefinitions: ComponentDefinition[] = [
   mastheadDefinition,
   headerDefinition,
@@ -22,6 +23,7 @@ export const componentDefinitions: ComponentDefinition[] = [
   cardDefinition,
   tableDefinition,
   inputFormDefinition,
+  layoutDefinition,
 ];
 
 export const componentRegistry: Map<string, ComponentDefinition> = new Map(

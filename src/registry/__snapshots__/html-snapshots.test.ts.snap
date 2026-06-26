@@ -60,6 +60,8 @@ exports[`컴포넌트 HTML 익스포트 스냅샷 > input-form — 기본 마크
 </div>"
 `;
 
+exports[`컴포넌트 HTML 익스포트 스냅샷 > layout — 기본 마크업 1`] = `"<div class="krds-grid" style="--cols:2"></div>"`;
+
 exports[`컴포넌트 HTML 익스포트 스냅샷 > masthead — 기본 마크업 1`] = `
 "<div id="krds-masthead">
 	<div class="toggle-wrap">
