@@ -1,38 +1,43 @@
 "use client";
 
 import { useState } from "react";
-import type { SitemapNode } from "../../lib/types";
+import { flattenTree, slugify } from "../../lib/tree-dnd";
 import { useEditorState, useEditorStoreApi } from "../../store/context";
-
-function countNodes(nodes: SitemapNode[]): number {
-  return nodes.reduce((sum, n) => sum + 1 + countNodes(n.children ?? []), 0);
-}
 
 export function SitemapTree() {
   const sitemap = useEditorState((s) => s.site?.sitemap ?? []);
+  const activePageId = useEditorState((s) => s.activePageId);
   const api = useEditorStoreApi();
+  // 방금 추가돼 편집모드로 열 노드 id
+  const [editingId, setEditingId] = useState<string | null>(null);
 
-  const addRoot = () => {
-    const n = countNodes(api.getState().site?.sitemap ?? []) + 1;
-    api.getState().addSitemapNode({ title: "새 메뉴", slug: `menu-${n}` });
+  const flat = flattenTree(sitemap);
+
+  // 새 노드 추가 후 즉시 편집모드. slug 기본은 menu-<전체노드수+1>.
+  const addNew = (parentId?: string) => {
+    const n = flattenTree(api.getState().site?.sitemap ?? []).length + 1;
+    const id = api.getState().addSitemapNode({ title: "새 메뉴", slug: `menu-${n}`, parentId });
+    setEditingId(id);
   };
 
   return (
     <div>
       <div className="panel-head">
         <strong>사이트맵</strong>
-        <button type="button" onClick={addRoot} aria-label="메뉴 추가" className="krds-btn small">
+        <button type="button" onClick={() => addNew()} aria-label="메뉴 추가" className="krds-btn small">
           ＋ 메뉴 추가
         </button>
       </div>
       <ul className="sitemap-tree">
-        {sitemap.map((node, i) => (
-          <TreeNode
-            key={node.id}
-            node={node}
-            parentId={undefined}
-            index={i}
-            siblingCount={sitemap.length}
+        {flat.map((f) => (
+          <SitemapRow
+            key={f.id}
+            flat={f}
+            active={f.node.pageId === activePageId}
+            editing={editingId === f.id}
+            startEdit={() => setEditingId(f.id)}
+            stopEdit={() => setEditingId(null)}
+            addChild={() => addNew(f.id)}
           />
         ))}
       </ul>
@@ -40,50 +45,63 @@ export function SitemapTree() {
   );
 }
 
-function TreeNode({
-  node,
-  parentId,
-  index,
-  siblingCount,
+function SitemapRow({
+  flat,
+  active,
+  editing,
+  startEdit,
+  stopEdit,
+  addChild,
 }: {
-  node: SitemapNode;
-  parentId: string | undefined;
-  index: number;
-  siblingCount: number;
+  flat: import("../../lib/tree-dnd").FlatNode;
+  active: boolean;
+  editing: boolean;
+  startEdit: () => void;
+  stopEdit: () => void;
+  addChild: () => void;
 }) {
   const api = useEditorStoreApi();
-  const [editing, setEditing] = useState(false);
+  const node = flat.node;
   const [title, setTitle] = useState(node.title);
   const [slug, setSlug] = useState(node.slug);
+  const [slugDirty, setSlugDirty] = useState(false);
 
-  const addChild = () => {
-    const n = countNodes(api.getState().site?.sitemap ?? []) + 1;
-    api.getState().addSitemapNode({ title: "새 메뉴", slug: `menu-${n}`, parentId: node.id });
-  };
-  const startEdit = () => {
-    setTitle(node.title);
-    setSlug(node.slug);
-    setEditing(true);
+  const onTitle = (v: string) => {
+    setTitle(v);
+    if (!slugDirty) {
+      const s = slugify(v);
+      if (s) setSlug(s); // 변환 가능할 때만 자동(한글이면 기존 유지)
+    }
   };
   const save = () => {
     api.getState().renameNode(node.id, { title, slug });
-    setEditing(false);
+    stopEdit();
   };
-  const moveUp = () => api.getState().moveNode(node.id, parentId, index - 1);
-  const moveDown = () => api.getState().moveNode(node.id, parentId, index + 1);
 
   return (
-    <li>
-      <div className="node-row">
+    <li className="sitemap-row-li" style={{ paddingLeft: flat.depth * 14 }}>
+      <div className={`node-row${active ? " is-active" : ""}`}>
         {editing ? (
           <span className="node-edit">
-            <input aria-label="제목" value={title} onChange={(e) => setTitle(e.target.value)} />
+            <input
+              aria-label="제목"
+              autoFocus
+              value={title}
+              onChange={(e) => onTitle(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") save();
+                if (e.key === "Escape") stopEdit();
+              }}
+            />
             <input
               aria-label="slug"
               value={slug}
-              onChange={(e) => setSlug(e.target.value)}
               disabled={node.isHome}
               placeholder="slug"
+              onChange={(e) => {
+                setSlugDirty(true);
+                setSlug(e.target.value);
+              }}
             />
             <button type="button" onClick={save} aria-label="저장">
               저장
@@ -91,6 +109,7 @@ function TreeNode({
           </span>
         ) : (
           <span className="node-view">
+            <span className="node-grip" aria-hidden="true">⠿</span>
             <button
               type="button"
               className="node-title"
@@ -98,29 +117,22 @@ function TreeNode({
             >
               {node.title}
             </button>
-            <code className="node-path">{node.path}</code>
             {node.isHome ? <span className="node-home-badge">대표</span> : null}
+            <code className="node-path">{node.path}</code>
             <span className="node-actions">
-              <button
-                type="button"
-                onClick={moveUp}
-                disabled={index === 0}
-                aria-label={`${node.title} 위로`}
-              >
-                ↑
-              </button>
-              <button
-                type="button"
-                onClick={moveDown}
-                disabled={index === siblingCount - 1}
-                aria-label={`${node.title} 아래로`}
-              >
-                ↓
-              </button>
               <button type="button" onClick={addChild} aria-label={`${node.title} 하위 추가`}>
                 ＋
               </button>
-              <button type="button" onClick={startEdit} aria-label={`${node.title} 이름변경`}>
+              <button
+                type="button"
+                onClick={() => {
+                  setTitle(node.title);
+                  setSlug(node.slug);
+                  setSlugDirty(false);
+                  startEdit();
+                }}
+                aria-label={`${node.title} 이름변경`}
+              >
                 ✎
               </button>
               {!node.isHome ? (
@@ -145,19 +157,6 @@ function TreeNode({
           </span>
         )}
       </div>
-      {node.children && node.children.length > 0 ? (
-        <ul className="sitemap-tree">
-          {node.children.map((child, i) => (
-            <TreeNode
-              key={child.id}
-              node={child}
-              parentId={node.id}
-              index={i}
-              siblingCount={node.children!.length}
-            />
-          ))}
-        </ul>
-      ) : null}
     </li>
   );
 }

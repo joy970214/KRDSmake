@@ -98,20 +98,24 @@
 .sitemap-tree {
   list-style: none;
   margin: 0;
-  padding-left: 12px;
+  padding: 0;
 }
-.sitemap-tree .sitemap-tree {
-  padding-left: 16px;
-  border-left: 1px dashed var(--krds-color-light-gray-30, #b1b8be);
+.sitemap-row-li {
+  list-style: none;
 }
 .node-row {
   display: flex;
   align-items: center;
   padding: 4px 6px;
   border-radius: 4px;
+  border-left: 2px solid transparent;
 }
 .node-row:hover {
   background: var(--krds-color-light-gray-10, #e6e8ea);
+}
+.node-row.is-active {
+  background: var(--krds-color-light-primary-5, #eaf2fe);
+  border-left-color: var(--krds-color-light-primary-50, #256ef4);
 }
 .node-view,
 .node-edit {
@@ -120,6 +124,16 @@
   gap: 6px;
   width: 100%;
 }
+.node-grip {
+  color: var(--krds-color-light-gray-40, #8a949e);
+  cursor: grab;
+  opacity: 0;
+  font-size: 12px;
+}
+.node-row:hover .node-grip,
+.node-row.is-active .node-grip {
+  opacity: 1;
+}
 .node-title {
   border: 0;
   background: transparent;
@@ -127,6 +141,7 @@
   font-size: 13px;
   font-weight: 600;
   padding: 0;
+  color: inherit;
 }
 .node-path {
   font-size: 11px;
@@ -139,10 +154,17 @@
   border-radius: 3px;
   padding: 1px 4px;
 }
+/* 액션은 평소 숨김, 호버/선택 시 노출 */
 .node-actions {
   margin-left: auto;
   display: flex;
   gap: 2px;
+  opacity: 0;
+  transition: opacity 0.12s;
+}
+.node-row:hover .node-actions,
+.node-row.is-active .node-actions {
+  opacity: 1;
 }
 .node-actions button {
   border: 1px solid var(--krds-color-light-gray-20, #cdd1d5);
