@@ -1,12 +1,13 @@
 # 작업 인수인계 (이어서 진행용)
 
-- 최종 업데이트: 2026-06-26 (세션 재개분 반영)
+- 최종 업데이트: 2026-06-26 (가로 다단 레이아웃 4-2 **완료** 반영)
 - 저장소: `git@github.com:joy970214/KRDSmake.git` (브랜치 `master`)
-  ⚠️ 로컬 master가 origin보다 **2 커밋 앞섬(push 안 됨)** — `913102e`(Step4), `028a950`(드래그 순서/드롭위치)
+  ⚠️ 로컬 master가 origin보다 **앞섬(push 안 됨)** — Step4~4-2 커밋들 미푸시
 - 프로젝트: KRDS 기반 공공 웹사이트 빌더 (노코드, 정적 export)
 
-> **재개 시 먼저 §4-2(사용자 보고 이슈 & 다음 작업: 가로 다단 레이아웃)부터 읽을 것.**
-> Step 5(우측 폼)보다 이게 우선 — 사용자가 캔버스 레이아웃 문제를 직접 보고했고 방향까지 확정 단계.
+> **재개 시 다음 작업 = Step 5(우측 설정 패널 자동 폼). §4 참조.**
+> 4-2(가로 다단 레이아웃)는 TDD 8단계 전부 완료 + 실브라우저 검증 끝남(§4-2 하단 "완료" 참조).
+> ⚠️ Step 5 착수 전 §4-2 "후속/주의"의 `updateComponentProps` 재귀화 이슈 먼저 볼 것.
 
 ---
 
@@ -23,14 +24,14 @@
 | 3 | 3패널 에디터 + 사이트맵 트리 CRUD/순서변경 | ✅ |
 | 4 | 캔버스 DnD 배치 + 컴포넌트 조작(순서/복제/삭제/숨김) | ✅ |
 | 4+ | 인스턴스 드래그 핸들(`⠿`)로 순서변경 + 드롭 위치 삽입 (커밋 `028a950` "②") | ✅ |
-| **4-2** | **가로 다단 레이아웃 (사용자 보고 #3) — §4-2 참조** | **🔶 진행중(TDD 1단계, types.ts 미커밋)** |
-| 5 | 우측 설정 패널 자동 폼(RHF+Zod) + 실시간 반영 (RHF/Zod 미설치 확인됨) | ⬜ |
+| **4-2** | **가로 다단 레이아웃 (사용자 보고 #3)** — TDD 1~8단계 + 실브라우저 검증 완료 | ✅ |
+| 5 | 우측 설정 패널 자동 폼(RHF+Zod) + 실시간 반영 (RHF/Zod 미설치 확인됨) | ⬜ **다음** |
 | 6 | 테마(라이트/선명/시스템) + 디바이스 전환 | ⬜ |
 | 7 | HTML 익스포트 + ZIP 다운로드 | ⬜ |
 
-- 테스트: **115개 통과**(22 파일) · lint 0 · tsc 0 · static export 빌드 성공
-- 화면 확인됨: 3패널 에디터 정상 렌더 + 팔레트→캔버스 드래그 배치/선택/복제/순서변경
-  (헤드리스 비보안컨텍스트 스크린샷 검증; 스샷 직전세션 scratchpad `785ffa5c`의 reorder.png 등)
+- 테스트: **139개 통과**(23 파일) · lint 0 · tsc 0 · static export 빌드 성공
+- 화면 확인됨: 3패널 에디터 + 팔레트→캔버스 배치/선택/복제/순서변경, **가로 다단(2~4단) 배치**
+  (헤드리스 비보안컨텍스트 검증; 이번 세션 scratchpad `f65ad225`의 layout-result.png: 4단 그리드+칼럼 자식)
 
 ## 2. 재개 명령어
 
@@ -153,23 +154,32 @@ src/
 - **CSS**: `.krds-grid{display:grid;gap:24px;grid-template-columns:repeat(var(--cols),1fr);max-width:1200px}` 류를 추가(`app/editor.css` 또는 별도). 모바일 1단 접힘은 미디어쿼리(디바이스 전환 Step6과 연계).
 - **익스포트(Step7로 연기)**: `exportTemplates.html`은 일단 그리드 래퍼만. 자식 주입은 익스포트 파이프라인이 columns를 재귀 처리할 때(Step7) 배선. 지금 과하게 만들지 말 것.
 
-### TDD 작업 순서 + 현재 진행 위치
-1. **모델 타입 확장** (`lib/types.ts` `columns?`, `registry/types.ts` `container?`) — *컴파일 토대, 동작 아님.*
-   → **🔶 진행중: `lib/types.ts`에 `columns?` 추가까지 함(미커밋). `registry/types.ts`의 `container?`는 아직.**
-2. ⬜ 레지스트리 `layout` def: `layout.test.tsx` 먼저(id/category/container 마커/defaultProps.columns=2/html 그리드 래퍼) → RED 확인 → 구현 → `index.ts` 등록.
-3. ⬜ store `addComponent` 컨테이너 초기화: 실패 테스트(layout 추가 시 `columns===[[],[]]`) → green.
-4. ⬜ store `addComponentToColumn` → 실패 테스트 → green.
-5. ⬜ store `setLayoutColumns`(리사이즈+자식 보존) → 실패 테스트 → green.
-6. ⬜ store `removeComponent` 재귀화 → 칼럼 내 자식 제거 테스트 → green.
-7. ⬜ `dnd-plan` 칼럼 라우팅 → planDrop 테스트 → green.
-8. ⬜ Canvas/AppShell 배선(UI) → 헤드리스 실브라우저로 2단 배치 검증.
+### TDD 작업 순서 — ✅ 전부 완료
+1. ✅ 모델 타입 확장(`lib/types.ts` `columns?`, `registry/types.ts` `container?`) — 커밋 `01988ce`
+2. ✅ 레지스트리 `layout` def(`layout.test.tsx`) — 커밋 `01988ce`
+3. ✅ store `addComponent` 컨테이너 초기화 + `buildInstance` 헬퍼 — 커밋 `773424a`
+4. ✅ store `addComponentToColumn` — 커밋 `773424a`
+5. ✅ store `setLayoutColumns`(리사이즈+자식 보존+`props.columns` 동기화) — 커밋 `1ed8ae4`
+6. ✅ store `removeComponent` 재귀화(`removeFromList`) — 커밋 `1ed8ae4`
+7. ✅ `dnd-plan` 칼럼 라우팅(`columnDroppableId`/`add-to-column`) — 커밋 `ce262b8`
+8. ✅ Canvas/AppShell 배선 + 그리드 CSS — 커밋 `ce262b8`
 
-> **재개 첫 행동**: `git diff src/lib/types.ts`로 미커밋 변경 확인 → 위 2번(layout.test.tsx RED)부터 계속. TDD 스킬(red→green) 준수. 미응답 결정 없음(방향·설계 모두 확정).
+> **실브라우저 검증 완료**(이번 세션): 다단 레이아웃 배치→2칼럼, 버튼을 칼럼0에 드롭→자식1,
+> 4단 버튼→4칼럼. scratchpad `f65ad225`의 `verify-layout.mjs` / `layout-result.png`.
+> ⚠️ scratchpad 스크립트는 ESM이라 `playwright` resolve 위해 **프로젝트 루트에서 실행**해야 함
+> (scratchpad에서 직접 `node`는 `ERR_MODULE_NOT_FOUND`). 루트에 복사 후 실행·삭제했음.
+
+#### ⚠️ Step 5 착수 전 반드시 처리할 후속 (이번 작업에서 발견)
+- **`updateComponentProps`/`toggleHidden`/`duplicateComponent`/`reorderComponent`는 아직 최상위
+  컴포넌트만 탐색**한다. 칼럼 안 자식(child)에는 닿지 않음. Step 5 우측 폼이 칼럼 자식의 props를
+  편집하려면 `updateComponentProps`를 **재귀화**해야 함(`removeFromList` 패턴 참고). 칼럼 자식
+  툴바는 현재 의도적으로 "삭제"만 노출(재귀 제거는 됨). 선택(`selectComponent`)도 자식 id로 정상 동작.
 
 #### MVP에서 의도적으로 뺀 것(후속/백로그)
 - 칼럼 **내부** 자식 순서변경 / 칼럼 간 이동(드래그) — MVP는 "드롭해 배치 + 제거"까지. 재정렬은 후속.
-- 레이아웃 **중첩**(레이아웃 안에 레이아웃) — 막거나 미지원으로.
-- 익스포트 자식 주입(Step7).
+  (`planDrop`도 칼럼 위 기존 인스턴스 이동은 `null` 반환 = 미지원.)
+- 레이아웃 **중첩**(레이아웃 안에 레이아웃) — 팔레트에 layout 있어 가능은 하나 UX 미검증. 막을지 결정 필요.
+- 익스포트 자식 주입(Step7) — `layout.tsx` html 템플릿은 빈 그리드 래퍼만. columns 재귀 주입 배선 필요.
 
 ## 4-1. Step 4에서 한 것 (참고)
 
