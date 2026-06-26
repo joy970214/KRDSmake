@@ -1,13 +1,13 @@
 # 작업 인수인계 (이어서 진행용)
 
-- 최종 업데이트: 2026-06-26 (가로 다단 레이아웃 4-2 **완료** 반영)
+- 최종 업데이트: 2026-06-26 (좌측 사이드바 LNB 4-3 **완료** 반영)
 - 저장소: `git@github.com:joy970214/KRDSmake.git` (브랜치 `master`)
-  ⚠️ 로컬 master가 origin보다 **앞섬(push 안 됨)** — Step4~4-2 커밋들 미푸시
+  ⚠️ 로컬 master가 origin보다 **앞섬(push 안 됨)** — Step4~4-3 커밋들 미푸시
 - 프로젝트: KRDS 기반 공공 웹사이트 빌더 (노코드, 정적 export)
 
 > **재개 시 다음 작업 = Step 5(우측 설정 패널 자동 폼). §4 참조.**
-> 4-2(가로 다단 레이아웃)는 TDD 8단계 전부 완료 + 실브라우저 검증 끝남(§4-2 하단 "완료" 참조).
-> ⚠️ Step 5 착수 전 §4-2 "후속/주의"의 `updateComponentProps` 재귀화 이슈 먼저 볼 것.
+> 4-2(가로 다단 레이아웃)·4-3(좌측 LNB) 완료 + 실브라우저 검증 끝남(§4-2, §4-3 참조).
+> ⚠️ Step 5 착수 전 먼저 볼 것: §4-2의 `updateComponentProps` 재귀화 + §4-3의 토글 Step5 이전.
 
 ---
 
@@ -25,13 +25,26 @@
 | 4 | 캔버스 DnD 배치 + 컴포넌트 조작(순서/복제/삭제/숨김) | ✅ |
 | 4+ | 인스턴스 드래그 핸들(`⠿`)로 순서변경 + 드롭 위치 삽입 (커밋 `028a950` "②") | ✅ |
 | **4-2** | **가로 다단 레이아웃 (사용자 보고 #3)** — TDD 1~8단계 + 실브라우저 검증 완료 | ✅ |
+| **4-3** | **페이지 좌측 사이드바(LNB)** — 사이트맵 자동파생 + 페이지별 토글 + 그리드 1200px 이전 | ✅ |
 | 5 | 우측 설정 패널 자동 폼(RHF+Zod) + 실시간 반영 (RHF/Zod 미설치 확인됨) | ⬜ **다음** |
 | 6 | 테마(라이트/선명/시스템) + 디바이스 전환 | ⬜ |
 | 7 | HTML 익스포트 + ZIP 다운로드 | ⬜ |
 
-- 테스트: **139개 통과**(23 파일) · lint 0 · tsc 0 · static export 빌드 성공
-- 화면 확인됨: 3패널 에디터 + 팔레트→캔버스 배치/선택/복제/순서변경, **가로 다단(2~4단) 배치**
-  (헤드리스 비보안컨텍스트 검증; 이번 세션 scratchpad `f65ad225`의 layout-result.png: 4단 그리드+칼럼 자식)
+- 테스트: **150개 통과**(24 파일) · lint 0 · tsc 0 · static export 빌드 성공
+- 화면 확인됨: 3패널 에디터 + 팔레트→캔버스 배치/선택/복제/순서변경, **가로 다단(2~4단) 배치**,
+  **좌측 LNB [사이드바|본문] 2칼럼**(scratchpad `f65ad225`: layout-result.png, lnb-desktop.png)
+
+### 4-3. 좌측 사이드바(LNB) — 한 것 / 설계근거 / 후속
+- 설계: `docs/superpowers/specs/2026-06-26-krds-page-sidebar-lnb-design.md`, 계획: `docs/superpowers/plans/2026-06-26-krds-page-sidebar-lnb.md`. 커밋 `c73fbf1`(buildLnb)·`31e245c`(showSidebar+액션)·`495ac1a`(Canvas+CSS).
+- **자동 파생**: `lib/lnb.ts buildLnb(sitemap, currentNodeId)` → 현재 페이지의 최상위 섹션 하위 트리를 LNB로, 현재 항목 강조. 홈/자식없는섹션/없는노드 → `null`(미표시).
+- **노출**: `Page.showSidebar?`(미설정=켜짐). 표시판정 `(showSidebar ?? true) && buildLnb≠null` → **홈 외 기본 켜짐**(홈은 buildLnb null로 자동 숨김). 토글=캔버스 상단 "사이드바 표시" 체크박스 → `setPageSidebar`.
+- **레이아웃**: 헤더/푸터 사이 `.page-frame`(max-width **1200px**·`margin:auto`·flex·gap24)에 `<aside.lnb>`(240px)+`<main.canvas-page>`. **1200px 제약을 `.krds-grid` 블록에서 `.page-frame`로 이전**(블록은 `width:100%`) → 사이드바로 본문 좁아져도 다단블록 정상. 모바일(<768px) 1단 스택(미디어쿼리).
+- **LNB는 읽기전용**(링크 preventDefault, ComponentInstance 아님 — 선택/드롭/익스포트 대상 아님).
+- ⚠️ **후속/주의**:
+  1. **토글의 Step 5 이전**: 캔버스 상단 "사이드바 표시"는 임시 진입점 → Step 5 우측 자동 폼에 `showSidebar` 필드로 옮길 것.
+  2. **홈에서도 토글 체크박스가 보이지만 효과 없음**(buildLnb null). UX 폴리시: 홈/표시불가 페이지에선 토글 숨기거나 안내. (현재 무해)
+  3. **익스포트 LNB 주입은 Step 7**: 현재 `.page-frame`/LNB는 에디터 캔버스에만. HTML 익스포트에 반영 필요.
+  4. 모바일 1단 스택은 에디터 셸(데스크톱 고정)에선 육안확인 불가 — Step 6 디바이스 프리뷰/익스포트에서 의미.
 
 ## 2. 재개 명령어
 
