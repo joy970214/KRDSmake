@@ -54,7 +54,8 @@
 ## 파생 로직 — `src/lib/lnb.ts` (순수)
 
 ```
-buildLnb(sitemap: SitemapNode[], currentNode: SitemapNode): LnbModel | null
+buildLnb(sitemap: SitemapNode[], currentNodeId: string): LnbModel | null
+// 호출부(Canvas)는 page.sitemapNodeId(string)를 넘긴다.
 ```
 
 - 동작:
