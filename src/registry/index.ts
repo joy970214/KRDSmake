@@ -36,4 +36,12 @@ export function listComponents(): ComponentDefinition[] {
   return componentDefinitions;
 }
 
+// 전역 레이아웃 요소: globalLayout에서 별도 렌더되므로 페이지 본문에 배치 불가.
+export const GLOBAL_COMPONENT_IDS = new Set(["masthead", "header", "footer", "skip-link"]);
+
+// 캔버스 본문에 드래그 배치 가능한 컴포넌트(전역 요소 제외).
+export function listPlaceableComponents(): ComponentDefinition[] {
+  return componentDefinitions.filter((d) => !GLOBAL_COMPONENT_IDS.has(d.id));
+}
+
 export type { ComponentDefinition } from "./types";

@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { createEditorStore, type EditorStore } from "./editor-store";
+import { getComponent } from "../registry";
 
 let store: EditorStore;
 beforeEach(() => {
@@ -137,6 +138,150 @@ describe("moveNode", () => {
     const aId = store.getState().addSitemapNode({ title: "A", slug: "a" });
     const cId = store.getState().addSitemapNode({ title: "C", slug: "c", parentId: aId });
     expect(() => store.getState().moveNode(aId, cId, 0)).toThrow();
+  });
+});
+
+describe("addComponent", () => {
+  it("defaultProps 복사본으로 인스턴스를 만들어 페이지에 추가한다", () => {
+    const pageId = store.getState().site!.pages[0].id;
+    const instId = store.getState().addComponent(pageId, "button");
+
+    const page = store.getState().site!.pages.find((p) => p.id === pageId)!;
+    expect(page.components).toHaveLength(1);
+    const inst = page.components[0];
+    expect(inst.id).toBe(instId);
+    expect(inst.componentDefinitionId).toBe("button");
+    expect(inst.order).toBe(0);
+    // defaultProps와 동등하되 동일 참조가 아니어야 한다(깊은 복사)
+    const def = getComponent("button")!;
+    expect(inst.props).toEqual(def.defaultProps);
+    expect(inst.props).not.toBe(def.defaultProps);
+  });
+
+  it("끝에 추가하면 order가 증가한다", () => {
+    const pageId = store.getState().site!.pages[0].id;
+    store.getState().addComponent(pageId, "button");
+    store.getState().addComponent(pageId, "page-title");
+
+    const comps = store.getState().site!.pages.find((p) => p.id === pageId)!.components;
+    expect(comps.map((c) => c.componentDefinitionId)).toEqual(["button", "page-title"]);
+    expect(comps.map((c) => c.order)).toEqual([0, 1]);
+  });
+
+  it("index를 지정하면 그 위치에 삽입하고 order를 재부여한다", () => {
+    const pageId = store.getState().site!.pages[0].id;
+    store.getState().addComponent(pageId, "button"); // 0
+    store.getState().addComponent(pageId, "table"); // 1
+    store.getState().addComponent(pageId, "image", 1); // button, image, table
+
+    const comps = store.getState().site!.pages.find((p) => p.id === pageId)!.components;
+    expect(comps.map((c) => c.componentDefinitionId)).toEqual(["button", "image", "table"]);
+    expect(comps.map((c) => c.order)).toEqual([0, 1, 2]);
+  });
+
+  it("두 인스턴스의 props는 서로 독립적이다", () => {
+    const pageId = store.getState().site!.pages[0].id;
+    const a = store.getState().addComponent(pageId, "button");
+    const b = store.getState().addComponent(pageId, "button");
+    const page = store.getState().site!.pages.find((p) => p.id === pageId)!;
+    const ia = page.components.find((c) => c.id === a)!;
+    const ib = page.components.find((c) => c.id === b)!;
+    expect(ia.props).not.toBe(ib.props);
+  });
+});
+
+describe("reorderComponent", () => {
+  it("인스턴스를 지정 index로 옮기고 order를 재부여한다", () => {
+    const pageId = store.getState().site!.pages[0].id;
+    const a = store.getState().addComponent(pageId, "button");
+    store.getState().addComponent(pageId, "table");
+    const c = store.getState().addComponent(pageId, "image");
+    // [button, table, image] → image를 맨 앞(0)으로
+    store.getState().reorderComponent(pageId, c, 0);
+
+    const comps = store.getState().site!.pages.find((p) => p.id === pageId)!.components;
+    expect(comps.map((x) => x.id)).toEqual([c, a, comps[2].id]);
+    expect(comps.map((x) => x.order)).toEqual([0, 1, 2]);
+  });
+});
+
+describe("duplicateComponent", () => {
+  it("새 id로 복제해 원본 바로 뒤에 삽입한다", () => {
+    const pageId = store.getState().site!.pages[0].id;
+    const a = store.getState().addComponent(pageId, "button");
+    store.getState().addComponent(pageId, "table");
+    store.getState().updateComponentProps(pageId, a, { label: "원본" });
+
+    const dup = store.getState().duplicateComponent(pageId, a);
+
+    const comps = store.getState().site!.pages.find((p) => p.id === pageId)!.components;
+    expect(comps.map((c) => c.id)).toEqual([a, dup, comps[2].id]);
+    const dupInst = comps.find((c) => c.id === dup)!;
+    expect(dupInst.id).not.toBe(a);
+    expect(dupInst.props.label).toBe("원본");
+    // 깊은 복사라 원본 props와 참조가 달라야 한다
+    const orig = comps.find((c) => c.id === a)!;
+    expect(dupInst.props).not.toBe(orig.props);
+    expect(comps.map((c) => c.order)).toEqual([0, 1, 2]);
+  });
+});
+
+describe("removeComponent", () => {
+  it("인스턴스를 제거하고 order를 재부여한다", () => {
+    const pageId = store.getState().site!.pages[0].id;
+    const a = store.getState().addComponent(pageId, "button");
+    const b = store.getState().addComponent(pageId, "table");
+    store.getState().removeComponent(pageId, a);
+
+    const comps = store.getState().site!.pages.find((p) => p.id === pageId)!.components;
+    expect(comps.map((c) => c.id)).toEqual([b]);
+    expect(comps[0].order).toBe(0);
+  });
+
+  it("선택된 인스턴스를 제거하면 선택이 해제된다", () => {
+    const pageId = store.getState().site!.pages[0].id;
+    const a = store.getState().addComponent(pageId, "button");
+    store.getState().selectComponent(pageId, a);
+    store.getState().removeComponent(pageId, a);
+    expect(store.getState().selection).toBeNull();
+  });
+});
+
+describe("toggleHidden", () => {
+  it("hidden을 토글한다", () => {
+    const pageId = store.getState().site!.pages[0].id;
+    const a = store.getState().addComponent(pageId, "button");
+    store.getState().toggleHidden(pageId, a);
+    let inst = store.getState().site!.pages.find((p) => p.id === pageId)!.components[0];
+    expect(inst.hidden).toBe(true);
+    store.getState().toggleHidden(pageId, a);
+    inst = store.getState().site!.pages.find((p) => p.id === pageId)!.components[0];
+    expect(inst.hidden).toBe(false);
+  });
+});
+
+describe("updateComponentProps", () => {
+  it("props를 병합한다", () => {
+    const pageId = store.getState().site!.pages[0].id;
+    const a = store.getState().addComponent(pageId, "button");
+    store.getState().updateComponentProps(pageId, a, { label: "확인" });
+    const inst = store.getState().site!.pages.find((p) => p.id === pageId)!.components[0];
+    expect(inst.props.label).toBe("확인");
+  });
+});
+
+describe("selectComponent / clearSelection", () => {
+  it("컴포넌트를 선택하고 해제한다", () => {
+    const pageId = store.getState().site!.pages[0].id;
+    const a = store.getState().addComponent(pageId, "button");
+    store.getState().selectComponent(pageId, a);
+    expect(store.getState().selection).toEqual({
+      kind: "component",
+      pageId,
+      instanceId: a,
+    });
+    store.getState().clearSelection();
+    expect(store.getState().selection).toBeNull();
   });
 });
 

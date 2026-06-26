@@ -2,7 +2,8 @@ import { createStore, type StoreApi } from "zustand/vanilla";
 import { newId } from "../lib/ids";
 import { recomputePaths } from "../lib/sitemap";
 import { createSite as makeSite } from "../lib/site-factory";
-import type { Page, Site, SitemapNode } from "../lib/types";
+import { getComponent } from "../registry";
+import type { ComponentInstance, Page, Site, SitemapNode } from "../lib/types";
 
 // ---- 순수 트리 헬퍼 (store 액션 내부에서만 사용) ----
 
@@ -106,11 +107,35 @@ function syncSite(site: Site, sitemap: SitemapNode[]): Site {
   return { ...site, sitemap: recomputed, pages };
 }
 
+// ---- 컴포넌트 인스턴스 헬퍼 ----
+
+// order를 배열 index와 동기화. 모든 components 변경 뒤 호출.
+function renumber(components: ComponentInstance[]): ComponentInstance[] {
+  return components.map((c, i) => (c.order === i ? c : { ...c, order: i }));
+}
+
+// pageId 페이지의 components를 fn으로 갱신(renumber까지)한 새 Site 반환
+function updatePageComponents(
+  site: Site,
+  pageId: string,
+  fn: (components: ComponentInstance[]) => ComponentInstance[],
+): Site {
+  return {
+    ...site,
+    pages: site.pages.map((p) =>
+      p.id === pageId ? { ...p, components: renumber(fn(p.components)) } : p,
+    ),
+  };
+}
+
 // ---- store ----
+
+export type Selection = { kind: "component"; pageId: string; instanceId: string };
 
 export type EditorState = {
   site: Site | null;
   activePageId: string | null;
+  selection: Selection | null;
 
   createSite: (name: string) => void;
   addSitemapNode: (input: { title: string; slug: string; parentId?: string }) => string;
@@ -119,6 +144,19 @@ export type EditorState = {
   setHome: (id: string) => void;
   moveNode: (id: string, targetParentId: string | undefined, index: number) => void;
   setActivePage: (pageId: string) => void;
+
+  addComponent: (pageId: string, componentDefinitionId: string, index?: number) => string;
+  reorderComponent: (pageId: string, instanceId: string, index: number) => void;
+  duplicateComponent: (pageId: string, instanceId: string) => string;
+  removeComponent: (pageId: string, instanceId: string) => void;
+  toggleHidden: (pageId: string, instanceId: string) => void;
+  updateComponentProps: (
+    pageId: string,
+    instanceId: string,
+    patch: Record<string, unknown>,
+  ) => void;
+  selectComponent: (pageId: string, instanceId: string) => void;
+  clearSelection: () => void;
 };
 
 export type EditorStore = StoreApi<EditorState>;
@@ -127,6 +165,7 @@ export function createEditorStore(): EditorStore {
   return createStore<EditorState>((set, get) => ({
     site: null,
     activePageId: null,
+    selection: null,
 
     createSite(name) {
       const site = makeSite(name);
@@ -239,6 +278,106 @@ export function createEditorStore(): EditorStore {
 
     setActivePage(pageId) {
       set({ activePageId: pageId });
+    },
+
+    addComponent(pageId, componentDefinitionId, index) {
+      const site = get().site;
+      if (!site) throw new Error("사이트가 없습니다");
+      const def = getComponent(componentDefinitionId);
+      if (!def) throw new Error(`알 수 없는 컴포넌트: ${componentDefinitionId}`);
+
+      const instId = newId();
+      const instance: ComponentInstance = {
+        id: instId,
+        componentDefinitionId,
+        props: structuredClone(def.defaultProps),
+        order: 0, // renumber가 확정
+      };
+      const next = updatePageComponents(site, pageId, (comps) => {
+        const copy = [...comps];
+        copy.splice(index ?? copy.length, 0, instance);
+        return copy;
+      });
+      set({ site: next });
+      return instId;
+    },
+
+    reorderComponent(pageId, instanceId, index) {
+      const site = get().site;
+      if (!site) return;
+      set({
+        site: updatePageComponents(site, pageId, (comps) => {
+          const from = comps.findIndex((c) => c.id === instanceId);
+          if (from === -1) return comps;
+          const copy = [...comps];
+          const [moved] = copy.splice(from, 1);
+          copy.splice(index, 0, moved);
+          return copy;
+        }),
+      });
+    },
+
+    duplicateComponent(pageId, instanceId) {
+      const site = get().site;
+      if (!site) throw new Error("사이트가 없습니다");
+      const newInstId = newId();
+      set({
+        site: updatePageComponents(site, pageId, (comps) => {
+          const i = comps.findIndex((c) => c.id === instanceId);
+          if (i === -1) return comps;
+          const src = comps[i];
+          const clone: ComponentInstance = {
+            ...src,
+            id: newInstId,
+            props: structuredClone(src.props),
+          };
+          const copy = [...comps];
+          copy.splice(i + 1, 0, clone);
+          return copy;
+        }),
+      });
+      return newInstId;
+    },
+
+    removeComponent(pageId, instanceId) {
+      const site = get().site;
+      if (!site) return;
+      const next = updatePageComponents(site, pageId, (comps) =>
+        comps.filter((c) => c.id !== instanceId),
+      );
+      const sel = get().selection;
+      const clearSel = sel?.kind === "component" && sel.instanceId === instanceId;
+      set({ site: next, ...(clearSel ? { selection: null } : {}) });
+    },
+
+    toggleHidden(pageId, instanceId) {
+      const site = get().site;
+      if (!site) return;
+      set({
+        site: updatePageComponents(site, pageId, (comps) =>
+          comps.map((c) => (c.id === instanceId ? { ...c, hidden: !c.hidden } : c)),
+        ),
+      });
+    },
+
+    updateComponentProps(pageId, instanceId, patch) {
+      const site = get().site;
+      if (!site) return;
+      set({
+        site: updatePageComponents(site, pageId, (comps) =>
+          comps.map((c) =>
+            c.id === instanceId ? { ...c, props: { ...c.props, ...patch } } : c,
+          ),
+        ),
+      });
+    },
+
+    selectComponent(pageId, instanceId) {
+      set({ selection: { kind: "component", pageId, instanceId } });
+    },
+
+    clearSelection() {
+      set({ selection: null });
     },
   }));
 }

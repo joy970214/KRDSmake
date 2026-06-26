@@ -1,6 +1,6 @@
 # 작업 인수인계 (이어서 진행용)
 
-- 최종 업데이트: 2026-06-25
+- 최종 업데이트: 2026-06-26
 - 저장소: `git@github.com:joy970214/KRDSmake.git` (브랜치 `master`, 전부 push됨)
 - 프로젝트: KRDS 기반 공공 웹사이트 빌더 (노코드, 정적 export)
 
@@ -17,13 +17,14 @@
 | 1 | 데이터 모델 + Zustand store + IndexedDB 영속화 | ✅ |
 | 2 | 컴포넌트 레지스트리 + 10종 정의(Preview + HTML 템플릿) | ✅ |
 | 3 | 3패널 에디터 + 사이트맵 트리 CRUD/순서변경 | ✅ |
-| **4** | **캔버스 DnD 배치 + 컴포넌트 조작(순서/복제/삭제/숨김)** | **⬜ ← 다음** |
-| 5 | 우측 설정 패널 자동 폼(RHF+Zod) + 실시간 반영 | ⬜ |
+| 4 | 캔버스 DnD 배치 + 컴포넌트 조작(순서/복제/삭제/숨김) | ✅ |
+| **5** | **우측 설정 패널 자동 폼(RHF+Zod) + 실시간 반영** | **⬜ ← 다음** |
 | 6 | 테마(라이트/선명/시스템) + 디바이스 전환 | ⬜ |
 | 7 | HTML 익스포트 + ZIP 다운로드 | ⬜ |
 
-- 테스트: **89개 통과** · lint 0 · tsc 0 · static export 빌드 성공
-- 화면 확인됨: 3패널 에디터 정상 렌더(헤드리스 스크린샷 검증)
+- 테스트: **109개 통과** · lint 0 · tsc 0 · static export 빌드 성공
+- 화면 확인됨: 3패널 에디터 정상 렌더 + 팔레트→캔버스 드래그 배치/선택/복제
+  (헤드리스 비보안컨텍스트 스크린샷 검증)
 
 ## 2. 재개 명령어
 
@@ -72,43 +73,53 @@ src/
   components/
     AppRoot.tsx         # store 생성 + bootstrap + Provider
     AppShell.tsx        # 상단바 + 3패널
-    Canvas.tsx          # 중앙 — 선택 페이지 KRDS 미리보기 (★ Step4에서 DnD 드롭/조작)
+    Canvas.tsx          # 중앙 — KRDS 미리보기 + 드롭 타깃 + 인스턴스 선택/조작 툴바
     left/
       LeftPanel.tsx     # 사이트맵/컴포넌트 탭
       SitemapTree.tsx   # 사이트맵 트리 CRUD/순서변경
-      ComponentPalette.tsx # 레지스트리 카드 (★ Step4에서 draggable로)
+      ComponentPalette.tsx # draggable 카드(배치가능 6종만; 전역요소 제외)
 ```
 
 자산(커밋됨, gitignore된 public/ 복사본은 빌드 때 생성):
 - `vendor/krds/` — KRDS HTML Component Kit v1.1.0 (PROVENANCE.md)
 - `vendor/krds-thumbnails/` — 컴포넌트 썸네일 55종 + `manifest.json`(번호↔컴포넌트)
 
-## 4. 다음 작업 = Step 4 상세 (캔버스 DnD 배치 + 조작)
+## 4. 다음 작업 = Step 5 상세 (우측 설정 패널 자동 폼)
 
-설계 검증기준: **드롭 → 인스턴스 추가, 순서변경 반영.**
+설계 검증기준: **인스턴스 선택 → 우측에 자동 폼 → 입력 시 캔버스 실시간 반영.**
+
+이미 깔린 토대(Step 4에서):
+- `store.selection`(`{kind:'component', pageId, instanceId}` | null) — 캔버스 선택 시 설정됨.
+- `store.updateComponentProps(pageId, instanceId, patch)` — props 병합(테스트 완료).
+- 각 컴포넌트 정의의 `editableProps: EditablePropSchema[]`(이미 10종 작성됨,
+  `registry/types.ts`의 `EditablePropType` 12종: text/textarea/url/number/select/
+  radio/checkbox/image/color/repeater/table/date).
 
 해야 할 것:
-1. **store 액션 추가 (TDD, `editor-store.ts`)** — `ComponentInstance` 대상:
-   - `addComponent(pageId, componentDefinitionId, index?)` → 레지스트리
-     `defaultProps`로 인스턴스 생성해 `page.components`에 삽입(order 부여)
-   - `reorderComponent(pageId, instanceId, index)`
-   - `duplicateComponent(pageId, instanceId)`
-   - `removeComponent(pageId, instanceId)`
-   - `toggleHidden(pageId, instanceId)`
-   - (선택) `updateComponentProps(pageId, instanceId, patch)` — Step5에서 쓰지만 미리 가능
-2. **dnd-kit 연결** (이미 설치됨: `@dnd-kit/core`, `/sortable`, `/utilities`):
-   - `ComponentPalette` 카드를 `useDraggable` 소스로
-   - `Canvas`를 드롭 타깃으로 → 드롭 시 `addComponent`
-   - 배치된 인스턴스는 `SortableContext`로 순서 변경(또는 ↑↓ 버튼 — Step3처럼)
-3. **Canvas 인스턴스 조작 UI**: 선택 → 핸들(위/아래/복제/삭제/숨김).
-   `Canvas.tsx`는 이미 `page.components`를 order순으로 `def.Preview`로 렌더 중 →
-   여기에 선택/조작 오버레이 추가.
-4. **선택 상태**: 설계 §5 `Selection`(`{kind:'component', pageId, instanceId}` 등)을
-   store에 추가하면 Step5 우측 패널과 자연스럽게 연결됨.
+1. **우측 패널 컴포넌트**(`AppShell.tsx`의 `.panel-right` 자리): `selection`을 구독해
+   선택된 인스턴스의 `def.editableProps`로 폼을 자동 생성.
+2. **RHF + Zod**(설치 여부 확인 필요): 스키마→Zod 리졸버 매핑, 필드 타입별 위젯.
+   `onChange`마다 `updateComponentProps` 호출(디바운스 가능) → 캔버스 즉시 반영.
+3. **전역요소 선택**: 헤더/푸터/마스트헤드는 팔레트에 없으므로(전역) 별도 진입점 필요.
+   설계 §5 `Selection`에 `{kind:'global', target:'header'|'footer'|'masthead'}` 추가 고려.
+   (Step 4에선 component 종류만 구현함.)
 
-테스트: store 액션은 vanilla store로 직접(기존 패턴), Canvas/Palette는 RTL.
-dnd 드래그 자체는 jsdom에서 어려우니 **액션 로직을 충분히 단위 테스트**하고
-드롭 핸들러는 얇게.
+주의: `EditablePropType`에 repeater/table/image 등 복합 타입 있음 → MVP는 단순 타입
+(text/textarea/url/number/select/radio/checkbox)부터, 복합은 후속.
+
+## 4-1. Step 4에서 한 것 (참고)
+
+- store 액션(TDD): `addComponent`(defaultProps `structuredClone` 깊은복사·index 삽입),
+  `reorderComponent`·`duplicateComponent`·`removeComponent`·`toggleHidden`·
+  `updateComponentProps`·`selectComponent`·`clearSelection`. `order`는 배열 index와
+  `renumber()`로 동기화. 삭제 시 선택 자동 해제.
+- 레지스트리: `listPlaceableComponents()` + `GLOBAL_COMPONENT_IDS`(전역 4종 제외).
+- dnd-kit: `AppShell`에 `DndContext`(PointerSensor distance:4) + `onDragEnd`→`addComponent`.
+  `ComponentPalette` 카드 = `useDraggable`(id `palette:<defId>`), `Canvas` 본문 = `useDroppable`
+  (id `canvas-page`). 드롭하면 추가+선택.
+- Canvas 조작 UI: 인스턴스 위 투명 `.ci-select` 버튼으로 선택, 선택 시 `.ci-toolbar`
+  (위/아래/복제/숨김↔표시/삭제). 숨김 인스턴스도 편집용으로 렌더(흐리게+배지).
+- 검증: vitest 109통과, tsc/lint 0, static build OK, 헤드리스 실브라우저 드래그 배치 확인.
 
 ## 5. 알아둘 점 / 결정사항
 

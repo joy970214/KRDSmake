@@ -244,3 +244,83 @@
   text-align: center;
   color: var(--krds-color-light-gray-50, #6d7882);
 }
+
+/* 드롭 영역 하이라이트 + 드래그 중 카드 */
+.canvas-page.is-drop-over {
+  outline: 2px dashed var(--krds-color-light-primary-50, #256ef4);
+  outline-offset: -8px;
+  background: var(--krds-color-light-primary-5, #eaf2fe);
+}
+.palette-card.is-dragging {
+  opacity: 0.4;
+}
+
+/* 캔버스에 배치된 인스턴스 — 선택/조작 오버레이 */
+.canvas-instance {
+  position: relative;
+}
+.canvas-instance + .canvas-instance {
+  margin-top: 4px;
+}
+.canvas-instance:hover {
+  outline: 1px solid var(--krds-color-light-gray-30, #b1b8be);
+}
+.canvas-instance.is-selected {
+  outline: 2px solid var(--krds-color-light-primary-50, #256ef4);
+}
+.canvas-instance.is-hidden .ci-preview {
+  opacity: 0.4;
+}
+/* 본문 위를 덮는 투명 선택 버튼(미리보기 링크 클릭 방지 + 선택) */
+.ci-select {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+}
+.ci-hidden-badge {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  z-index: 2;
+  font-size: 11px;
+  background: var(--krds-color-light-gray-60, #58616a);
+  color: #fff;
+  border-radius: 3px;
+  padding: 1px 6px;
+}
+.ci-toolbar {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  z-index: 2;
+  display: flex;
+  gap: 4px;
+  background: var(--krds-color-light-gray-0, #fff);
+  border: 1px solid var(--krds-color-light-gray-30, #b1b8be);
+  border-radius: 6px;
+  padding: 3px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.16);
+}
+.ci-toolbar button {
+  font-size: 12px;
+  line-height: 1;
+  padding: 4px 6px;
+  border: 1px solid var(--krds-color-light-gray-20, #cdd1d5);
+  background: var(--krds-color-light-gray-0, #fff);
+  border-radius: 4px;
+  cursor: pointer;
+}
+.ci-toolbar button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.ci-toolbar .ci-del {
+  color: var(--krds-color-light-point-50, #f04438);
+  border-color: var(--krds-color-light-point-50, #f04438);
+}
