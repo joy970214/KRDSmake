@@ -239,6 +239,51 @@ describe("addComponentToColumn", () => {
   });
 });
 
+describe("setLayoutColumns", () => {
+  const layoutOf = (pageId: string) =>
+    store.getState().site!.pages.find((p) => p.id === pageId)!.components[0];
+
+  it("단 수를 늘리면 빈 칼럼을 추가하고 props.columns도 동기화한다", () => {
+    const pageId = store.getState().site!.pages[0].id;
+    const layoutId = store.getState().addComponent(pageId, "layout");
+
+    store.getState().setLayoutColumns(pageId, layoutId, 4);
+
+    const layout = layoutOf(pageId);
+    expect(layout.columns).toHaveLength(4);
+    expect(layout.columns).toEqual([[], [], [], []]);
+    expect(layout.props.columns).toBe(4);
+  });
+
+  it("단 수를 줄이면 넘치는 칼럼의 자식을 마지막 남는 칼럼으로 이동해 보존한다", () => {
+    const pageId = store.getState().site!.pages[0].id;
+    const layoutId = store.getState().addComponent(pageId, "layout");
+    store.getState().setLayoutColumns(pageId, layoutId, 3); // 3단
+    store.getState().addComponentToColumn(pageId, layoutId, 0, "button"); // col0
+    store.getState().addComponentToColumn(pageId, layoutId, 2, "table"); // col2
+    store.getState().addComponentToColumn(pageId, layoutId, 2, "image"); // col2
+
+    store.getState().setLayoutColumns(pageId, layoutId, 2); // 2단으로 축소
+
+    const layout = layoutOf(pageId);
+    expect(layout.columns).toHaveLength(2);
+    expect(layout.props.columns).toBe(2);
+    // col0 그대로, col2의 자식들은 마지막 남는 칼럼(col1) 끝으로 이동
+    expect(layout.columns![0].map((c) => c.componentDefinitionId)).toEqual(["button"]);
+    expect(layout.columns![1].map((c) => c.componentDefinitionId)).toEqual(["table", "image"]);
+  });
+
+  it("2~4 범위를 벗어난 값은 무시한다", () => {
+    const pageId = store.getState().site!.pages[0].id;
+    const layoutId = store.getState().addComponent(pageId, "layout");
+
+    store.getState().setLayoutColumns(pageId, layoutId, 1);
+    expect(layoutOf(pageId).columns).toHaveLength(2);
+    store.getState().setLayoutColumns(pageId, layoutId, 5);
+    expect(layoutOf(pageId).columns).toHaveLength(2);
+  });
+});
+
 describe("reorderComponent", () => {
   it("인스턴스를 지정 index로 옮기고 order를 재부여한다", () => {
     const pageId = store.getState().site!.pages[0].id;
@@ -292,6 +337,29 @@ describe("removeComponent", () => {
     const a = store.getState().addComponent(pageId, "button");
     store.getState().selectComponent(pageId, a);
     store.getState().removeComponent(pageId, a);
+    expect(store.getState().selection).toBeNull();
+  });
+
+  it("레이아웃 칼럼 안의 자식도 재귀로 찾아 제거하고 order를 재부여한다", () => {
+    const pageId = store.getState().site!.pages[0].id;
+    const layoutId = store.getState().addComponent(pageId, "layout");
+    const child1 = store.getState().addComponentToColumn(pageId, layoutId, 0, "button");
+    store.getState().addComponentToColumn(pageId, layoutId, 0, "table");
+
+    store.getState().removeComponent(pageId, child1);
+
+    const layout = store.getState().site!.pages.find((p) => p.id === pageId)!.components[0];
+    expect(layout.id).toBe(layoutId); // 레이아웃 자체는 유지
+    expect(layout.columns![0].map((c) => c.componentDefinitionId)).toEqual(["table"]);
+    expect(layout.columns![0][0].order).toBe(0);
+  });
+
+  it("선택된 칼럼 자식을 제거하면 선택이 해제된다", () => {
+    const pageId = store.getState().site!.pages[0].id;
+    const layoutId = store.getState().addComponent(pageId, "layout");
+    const child = store.getState().addComponentToColumn(pageId, layoutId, 1, "button");
+    store.getState().selectComponent(pageId, child);
+    store.getState().removeComponent(pageId, child);
     expect(store.getState().selection).toBeNull();
   });
 });

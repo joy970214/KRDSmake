@@ -131,6 +131,22 @@ function renumber(components: ComponentInstance[]): ComponentInstance[] {
   return components.map((c, i) => (c.order === i ? c : { ...c, order: i }));
 }
 
+// id에 해당하는 인스턴스를 목록에서 제거(레이아웃 칼럼 안 자식까지 재귀).
+// 같은 레벨에서 제거되면 renumber, 아니면 칼럼 안으로 내려가 탐색.
+function removeFromList(
+  components: ComponentInstance[],
+  instanceId: string,
+): ComponentInstance[] {
+  if (components.some((c) => c.id === instanceId)) {
+    return renumber(components.filter((c) => c.id !== instanceId));
+  }
+  return components.map((c) =>
+    c.columns
+      ? { ...c, columns: c.columns.map((col) => removeFromList(col, instanceId)) }
+      : c,
+  );
+}
+
 // pageId 페이지의 components를 fn으로 갱신(renumber까지)한 새 Site 반환
 function updatePageComponents(
   site: Site,
@@ -170,6 +186,7 @@ export type EditorState = {
     componentDefinitionId: string,
     index?: number,
   ) => string;
+  setLayoutColumns: (pageId: string, layoutInstanceId: string, count: number) => void;
   reorderComponent: (pageId: string, instanceId: string, index: number) => void;
   duplicateComponent: (pageId: string, instanceId: string) => string;
   removeComponent: (pageId: string, instanceId: string) => void;
@@ -339,6 +356,34 @@ export function createEditorStore(): EditorStore {
       return child.id;
     },
 
+    setLayoutColumns(pageId, layoutInstanceId, count) {
+      if (count < 2 || count > 4) return; // KRDS 2~4단만 허용
+      const site = get().site;
+      if (!site) throw new Error("사이트가 없습니다");
+
+      const next = updatePageComponents(site, pageId, (comps) =>
+        comps.map((c) => {
+          if (c.id !== layoutInstanceId || !c.columns) return c;
+          const current = c.columns;
+          if (count === current.length) return c;
+
+          let columns: ComponentInstance[][];
+          if (count > current.length) {
+            // 확장: 빈 칼럼 추가
+            const extra = Array.from({ length: count - current.length }, () => []);
+            columns = [...current.map((col) => [...col]), ...extra];
+          } else {
+            // 축소: 넘치는 칼럼의 자식을 마지막 남는 칼럼으로 이동(보존)
+            columns = current.slice(0, count).map((col) => [...col]);
+            const overflow = current.slice(count).flat();
+            columns[count - 1] = renumber([...columns[count - 1], ...overflow]);
+          }
+          return { ...c, columns, props: { ...c.props, columns: count } };
+        }),
+      );
+      set({ site: next });
+    },
+
     reorderComponent(pageId, instanceId, index) {
       const site = get().site;
       if (!site) return;
@@ -380,7 +425,7 @@ export function createEditorStore(): EditorStore {
       const site = get().site;
       if (!site) return;
       const next = updatePageComponents(site, pageId, (comps) =>
-        comps.filter((c) => c.id !== instanceId),
+        removeFromList(comps, instanceId),
       );
       const sel = get().selection;
       const clearSel = sel?.kind === "component" && sel.instanceId === instanceId;
