@@ -177,6 +177,7 @@ export type EditorState = {
   setHome: (id: string) => void;
   moveNode: (id: string, targetParentId: string | undefined, index: number) => void;
   setActivePage: (pageId: string) => void;
+  setNodeCategory: (id: string, isCategory: boolean) => void;
 
   addComponent: (pageId: string, componentDefinitionId: string, index?: number) => string;
   addComponentToColumn: (
@@ -320,6 +321,12 @@ export function createEditorStore(): EditorStore {
 
     setActivePage(pageId) {
       set({ activePageId: pageId });
+    },
+
+    setNodeCategory(id, isCategory) {
+      const site = get().site;
+      if (!site) return;
+      set({ site: { ...site, sitemap: updateNode(site.sitemap, id, { isCategory }) } });
     },
 
     addComponent(pageId, componentDefinitionId, index) {

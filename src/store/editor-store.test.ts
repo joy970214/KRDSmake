@@ -112,6 +112,23 @@ describe("setActivePage", () => {
   });
 });
 
+describe("setNodeCategory", () => {
+  it("노드의 isCategory를 켜고 끈다", () => {
+    const id = store.getState().addSitemapNode({ title: "서비스", slug: "service" });
+    store.getState().setNodeCategory(id, true);
+    expect(store.getState().site!.sitemap.find((nn) => nn.id === id)!.isCategory).toBe(true);
+    store.getState().setNodeCategory(id, false);
+    expect(store.getState().site!.sitemap.find((nn) => nn.id === id)!.isCategory).toBe(false);
+  });
+
+  it("다른 노드에는 영향을 주지 않는다", () => {
+    const homeId = store.getState().site!.sitemap[0].id;
+    const id = store.getState().addSitemapNode({ title: "서비스", slug: "service" });
+    store.getState().setNodeCategory(id, true);
+    expect(store.getState().site!.sitemap.find((nn) => nn.id === homeId)!.isCategory).toBeUndefined();
+  });
+});
+
 describe("moveNode", () => {
   it("다른 부모 아래로 옮기면 path가 재계산된다", () => {
     const aId = store.getState().addSitemapNode({ title: "A", slug: "a" });
