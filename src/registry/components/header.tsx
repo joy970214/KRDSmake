@@ -2,8 +2,31 @@ import { attr, escapeHtml, pending2x, thumb } from "../helpers";
 import type { Site } from "../../lib/types";
 import type { ComponentDefinition, ExportCtx, PreviewCtx, Props } from "../types";
 
-// MVP 단순화 헤더. 실제 KRDS 헤더(#krds-header)의 핵심 골격(로고·주메뉴·유틸)만 구성.
-// 주메뉴는 사이트맵 상위 노드(홈 제외, 헤더 노출)에서 생성 — 설계 §12-5.
+/**
+ * MVP 단순화 헤더 — KRDS 공식 골격 준수 (audit E3 교정 적용).
+ *
+ * 렌더 구조 (vendor/krds/html/code/header.html 기반):
+ *   header#krds-header
+ *     div.header-in
+ *       div.header-container > div.inner
+ *         div.header-branding
+ *           h2.logo > a
+ *           div.header-actions
+ *             button.btn-navi.sch   (통합검색, 조건부)
+ *             a.btn-navi.login      (로그인, 조건부)
+ *             button.btn-navi.join  (회원가입, 조건부)
+ *             button.btn-navi.all[aria-controls=mobile-nav]  (전체메뉴, 조건부)
+ *       nav.krds-main-menu
+ *         div.inner > ul.gnb-menu
+ *           li > a.gnb-main-trigger.is-link  (1Depth 링크)
+ *
+ * 의도적 생략 (MVP 백로그):
+ *   - header-utility 바 (폰트크기·언어·관련사이트)
+ *   - GNB 2depth+ flyout (gnb-toggle-wrap / gnb-main-list / gnb-sub-list / gnb-sub-banner)
+ *   - 나의 GOV 드롭다운 (krds-drop-wrap my-drop)
+ *   - 모바일 GNB (#mobile-nav.krds-main-menu-mobile)
+ *   - 로고 이미지 (sr-only + CSS background) → 텍스트 직접 표시
+ */
 type Auth = { showLogin?: boolean; showSignup?: boolean; showMyMenu?: boolean };
 
 function topMenu(site: Site): { title: string; path: string }[] {
@@ -37,41 +60,51 @@ export const headerDefinition: ComponentDefinition = {
     const auth = (props.auth ?? {}) as Auth;
     return (
       <header id="krds-header">
-        <div className="inner">
-          <h1 className="logo">
-            <a href="/">{String(props.serviceName ?? "")}</a>
-          </h1>
-          <nav className="gnb-menu" aria-label="주메뉴">
-            <ul className="gnb-main-list">
-              {topMenu(ctx.site).map((m, i) => (
-                <li key={i}>
-                  <a href={m.path}>{m.title}</a>
-                </li>
-              ))}
-            </ul>
-          </nav>
-          <div className="gnb-utils">
-            {props.showSearch ? (
-              <button type="button" className="btn-search">
-                통합검색
-              </button>
-            ) : null}
-            {auth.showLogin ? (
-              <a href="#" className="krds-btn text">
-                로그인
-              </a>
-            ) : null}
-            {auth.showSignup ? (
-              <a href="#" className="krds-btn text">
-                회원가입
-              </a>
-            ) : null}
-            {props.showAllMenu ? (
-              <button type="button" className="btn-all">
-                전체메뉴
-              </button>
-            ) : null}
+        <div className="header-in">
+          <div className="header-container">
+            <div className="inner">
+              <div className="header-branding">
+                <h2 className="logo">
+                  <a href="/">{String(props.serviceName ?? "")}</a>
+                </h2>
+                <div className="header-actions">
+                  {props.showSearch ? (
+                    <button type="button" className="btn-navi sch">
+                      통합검색
+                    </button>
+                  ) : null}
+                  {auth.showLogin ? (
+                    <a href="#" className="btn-navi login">
+                      로그인
+                    </a>
+                  ) : null}
+                  {auth.showSignup ? (
+                    <button type="button" className="btn-navi join">
+                      회원가입
+                    </button>
+                  ) : null}
+                  {props.showAllMenu ? (
+                    <button type="button" className="btn-navi all" aria-controls="mobile-nav">
+                      전체메뉴
+                    </button>
+                  ) : null}
+                </div>
+              </div>
+            </div>
           </div>
+          <nav className="krds-main-menu">
+            <div className="inner">
+              <ul className="gnb-menu">
+                {topMenu(ctx.site).map((m, i) => (
+                  <li key={i}>
+                    <a href={m.path} className="gnb-main-trigger is-link">
+                      {m.title}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </nav>
         </div>
       </header>
     );
@@ -81,32 +114,45 @@ export const headerDefinition: ComponentDefinition = {
     html(props, ctx: ExportCtx) {
       const auth = (props.auth ?? {}) as Auth;
       const menu = topMenu(ctx.site)
-        .map((m) => `\t\t\t\t<li><a href="${attr(m.path)}">${escapeHtml(m.title)}</a></li>`)
+        .map(
+          (m) =>
+            `\t\t\t\t<li><a href="${attr(m.path)}" class="gnb-main-trigger is-link">${escapeHtml(m.title)}</a></li>`,
+        )
         .join("\n");
-      const utils = [
+      const actions = [
         props.showSearch
-          ? `\t\t\t<button type="button" class="btn-search">통합검색</button>`
+          ? `\t\t\t\t\t<button type="button" class="btn-navi sch">통합검색</button>`
           : "",
-        auth.showLogin ? `\t\t\t<a href="#" class="krds-btn text">로그인</a>` : "",
-        auth.showSignup ? `\t\t\t<a href="#" class="krds-btn text">회원가입</a>` : "",
+        auth.showLogin ? `\t\t\t\t\t<a href="#" class="btn-navi login">로그인</a>` : "",
+        auth.showSignup
+          ? `\t\t\t\t\t<button type="button" class="btn-navi join">회원가입</button>`
+          : "",
         props.showAllMenu
-          ? `\t\t\t<button type="button" class="btn-all">전체메뉴</button>`
+          ? `\t\t\t\t\t<button type="button" class="btn-navi all" aria-controls="mobile-nav">전체메뉴</button>`
           : "",
       ]
         .filter(Boolean)
         .join("\n");
       return [
         `<header id="krds-header">`,
-        `\t<div class="inner">`,
-        `\t\t<h1 class="logo"><a href="/">${escapeHtml(props.serviceName)}</a></h1>`,
-        `\t\t<nav class="gnb-menu" aria-label="주메뉴">`,
-        `\t\t\t<ul class="gnb-main-list">`,
-        menu,
-        `\t\t\t</ul>`,
-        `\t\t</nav>`,
-        `\t\t<div class="gnb-utils">`,
-        utils,
+        `\t<div class="header-in">`,
+        `\t\t<div class="header-container">`,
+        `\t\t\t<div class="inner">`,
+        `\t\t\t\t<div class="header-branding">`,
+        `\t\t\t\t\t<h2 class="logo"><a href="/">${escapeHtml(props.serviceName)}</a></h2>`,
+        `\t\t\t\t\t<div class="header-actions">`,
+        actions,
+        `\t\t\t\t\t</div>`,
+        `\t\t\t\t</div>`,
+        `\t\t\t</div>`,
         `\t\t</div>`,
+        `\t\t<nav class="krds-main-menu">`,
+        `\t\t\t<div class="inner">`,
+        `\t\t\t\t<ul class="gnb-menu">`,
+        menu,
+        `\t\t\t\t</ul>`,
+        `\t\t\t</div>`,
+        `\t\t</nav>`,
         `\t</div>`,
         `</header>`,
       ]
