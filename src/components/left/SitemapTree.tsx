@@ -3,6 +3,7 @@
 import { useState } from "react";
 import {
   DndContext,
+  closestCenter,
   PointerSensor,
   KeyboardSensor,
   useSensor,
@@ -94,6 +95,7 @@ export function SitemapTree() {
       </div>
       <DndContext
         sensors={sensors}
+        collisionDetection={closestCenter}
         onDragStart={onDragStart}
         onDragMove={onDragMove}
         onDragEnd={onDragEnd}
@@ -111,9 +113,6 @@ export function SitemapTree() {
                 indent={INDENT}
                 active={f.node.pageId === activePageId}
                 editing={editingId === f.id}
-                dropDepth={
-                  activeId && projected && overId === f.id ? projected.parentId : undefined
-                }
                 showIndicator={!!activeId && overId === f.id && !!projected}
                 indicatorDepth={projected ? indicatorDepthFor(flat, projected) : 0}
                 startEdit={() => setEditingId(f.id)}
@@ -143,7 +142,6 @@ function SitemapRow({
   indent: number;
   active: boolean;
   editing: boolean;
-  dropDepth?: string | undefined;
   showIndicator: boolean;
   indicatorDepth: number;
   startEdit: () => void;
