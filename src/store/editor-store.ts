@@ -109,6 +109,23 @@ function syncSite(site: Site, sitemap: SitemapNode[]): Site {
 
 // ---- 컴포넌트 인스턴스 헬퍼 ----
 
+// 정의 id로 새 인스턴스 생성(defaultProps 깊은복사 + 컨테이너면 빈 칼럼 초기화).
+function buildInstance(componentDefinitionId: string): ComponentInstance {
+  const def = getComponent(componentDefinitionId);
+  if (!def) throw new Error(`알 수 없는 컴포넌트: ${componentDefinitionId}`);
+  const instance: ComponentInstance = {
+    id: newId(),
+    componentDefinitionId,
+    props: structuredClone(def.defaultProps),
+    order: 0, // renumber가 확정
+  };
+  if (def.container) {
+    const count = Number(def.defaultProps[def.container.columnCountProp]) || 2;
+    instance.columns = Array.from({ length: count }, () => []);
+  }
+  return instance;
+}
+
 // order를 배열 index와 동기화. 모든 components 변경 뒤 호출.
 function renumber(components: ComponentInstance[]): ComponentInstance[] {
   return components.map((c, i) => (c.order === i ? c : { ...c, order: i }));
@@ -146,6 +163,13 @@ export type EditorState = {
   setActivePage: (pageId: string) => void;
 
   addComponent: (pageId: string, componentDefinitionId: string, index?: number) => string;
+  addComponentToColumn: (
+    pageId: string,
+    layoutInstanceId: string,
+    columnIndex: number,
+    componentDefinitionId: string,
+    index?: number,
+  ) => string;
   reorderComponent: (pageId: string, instanceId: string, index: number) => void;
   duplicateComponent: (pageId: string, instanceId: string) => string;
   removeComponent: (pageId: string, instanceId: string) => void;
@@ -283,23 +307,36 @@ export function createEditorStore(): EditorStore {
     addComponent(pageId, componentDefinitionId, index) {
       const site = get().site;
       if (!site) throw new Error("사이트가 없습니다");
-      const def = getComponent(componentDefinitionId);
-      if (!def) throw new Error(`알 수 없는 컴포넌트: ${componentDefinitionId}`);
 
-      const instId = newId();
-      const instance: ComponentInstance = {
-        id: instId,
-        componentDefinitionId,
-        props: structuredClone(def.defaultProps),
-        order: 0, // renumber가 확정
-      };
+      const instance = buildInstance(componentDefinitionId);
       const next = updatePageComponents(site, pageId, (comps) => {
         const copy = [...comps];
         copy.splice(index ?? copy.length, 0, instance);
         return copy;
       });
       set({ site: next });
-      return instId;
+      return instance.id;
+    },
+
+    addComponentToColumn(pageId, layoutInstanceId, columnIndex, componentDefinitionId, index) {
+      const site = get().site;
+      if (!site) throw new Error("사이트가 없습니다");
+
+      const child = buildInstance(componentDefinitionId);
+      const next = updatePageComponents(site, pageId, (comps) =>
+        comps.map((c) => {
+          if (c.id !== layoutInstanceId || !c.columns) return c;
+          const columns = c.columns.map((col, i) => {
+            if (i !== columnIndex) return col;
+            const copy = [...col];
+            copy.splice(index ?? copy.length, 0, child);
+            return renumber(copy);
+          });
+          return { ...c, columns };
+        }),
+      );
+      set({ site: next });
+      return child.id;
     },
 
     reorderComponent(pageId, instanceId, index) {

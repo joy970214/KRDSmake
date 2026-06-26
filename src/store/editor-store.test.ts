@@ -190,6 +190,55 @@ describe("addComponent", () => {
   });
 });
 
+describe("addComponent — 컨테이너(다단 레이아웃)", () => {
+  it("container 정의를 추가하면 단 수만큼 빈 칼럼 배열로 초기화한다", () => {
+    const pageId = store.getState().site!.pages[0].id;
+    const id = store.getState().addComponent(pageId, "layout");
+
+    const inst = store.getState().site!.pages.find((p) => p.id === pageId)!.components[0];
+    expect(inst.id).toBe(id);
+    expect(inst.columns).toEqual([[], []]); // 기본 2단
+  });
+
+  it("일반 컴포넌트는 columns를 갖지 않는다", () => {
+    const pageId = store.getState().site!.pages[0].id;
+    store.getState().addComponent(pageId, "button");
+    const inst = store.getState().site!.pages.find((p) => p.id === pageId)!.components[0];
+    expect(inst.columns).toBeUndefined();
+  });
+});
+
+describe("addComponentToColumn", () => {
+  it("레이아웃의 지정 칼럼에 자식을 추가하고 자식 id를 반환한다", () => {
+    const pageId = store.getState().site!.pages[0].id;
+    const layoutId = store.getState().addComponent(pageId, "layout");
+
+    const childId = store.getState().addComponentToColumn(pageId, layoutId, 0, "button");
+
+    const layout = store.getState().site!.pages.find((p) => p.id === pageId)!.components[0];
+    expect(layout.columns![0]).toHaveLength(1);
+    expect(layout.columns![1]).toHaveLength(0);
+    const child = layout.columns![0][0];
+    expect(child.id).toBe(childId);
+    expect(child.componentDefinitionId).toBe("button");
+    // defaultProps 깊은 복사
+    expect(child.props).toEqual(getComponent("button")!.defaultProps);
+    expect(child.props).not.toBe(getComponent("button")!.defaultProps);
+  });
+
+  it("같은 칼럼에 여러 자식을 순서대로 쌓고 index로 삽입한다", () => {
+    const pageId = store.getState().site!.pages[0].id;
+    const layoutId = store.getState().addComponent(pageId, "layout");
+    store.getState().addComponentToColumn(pageId, layoutId, 0, "button"); // [button]
+    store.getState().addComponentToColumn(pageId, layoutId, 0, "table"); // [button, table]
+    store.getState().addComponentToColumn(pageId, layoutId, 0, "image", 1); // [button, image, table]
+
+    const col = store.getState().site!.pages.find((p) => p.id === pageId)!.components[0]
+      .columns![0];
+    expect(col.map((c) => c.componentDefinitionId)).toEqual(["button", "image", "table"]);
+  });
+});
+
 describe("reorderComponent", () => {
   it("인스턴스를 지정 index로 옮기고 order를 재부여한다", () => {
     const pageId = store.getState().site!.pages[0].id;
