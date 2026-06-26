@@ -1,16 +1,22 @@
 "use client";
 
 import { useDroppable } from "@dnd-kit/core";
+import {
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { getComponent } from "../registry";
 import type { PreviewCtx } from "../registry/types";
 import { useEditorState, useEditorStoreApi } from "../store/context";
+import { CANVAS_DROPPABLE_ID } from "../lib/dnd-plan";
 import type { ComponentInstance } from "../lib/types";
 
-// 캔버스 드롭 타깃 id (DndContext onDragEnd에서 매칭) — AppShell과 공유.
-export const CANVAS_DROPPABLE_ID = "canvas-page";
+export { CANVAS_DROPPABLE_ID } from "../lib/dnd-plan";
 
 // 중앙 캔버스 — 선택 페이지를 KRDS 미리보기로 렌더(헤더/푸터 공통 + 본문).
-// 본문 컴포넌트는 드래그 배치 + 선택/조작(순서·복제·숨김·삭제) 가능. 모드/디바이스 전환은 Step 6.
+// 본문 컴포넌트는 드래그 배치/순서변경 + 선택/조작(복제·숨김·삭제) 가능. 모드/디바이스 전환은 Step 6.
 export function Canvas() {
   const site = useEditorState((s) => s.site);
   const activePageId = useEditorState((s) => s.activePageId);
@@ -52,19 +58,24 @@ export function Canvas() {
               좌측의 컴포넌트를 이 영역으로 드래그하여 페이지를 구성하세요.
             </p>
           ) : (
-            components.map((inst, i) => (
-              <CanvasInstance
-                key={inst.id}
-                inst={inst}
-                index={i}
-                last={i === components.length - 1}
-                pageId={page.id}
-                ctx={ctx}
-                selected={
-                  selection?.kind === "component" && selection.instanceId === inst.id
-                }
-              />
-            ))
+            <SortableContext
+              items={components.map((c) => c.id)}
+              strategy={verticalListSortingStrategy}
+            >
+              {components.map((inst, i) => (
+                <CanvasInstance
+                  key={inst.id}
+                  inst={inst}
+                  index={i}
+                  last={i === components.length - 1}
+                  pageId={page.id}
+                  ctx={ctx}
+                  selected={
+                    selection?.kind === "component" && selection.instanceId === inst.id
+                  }
+                />
+              ))}
+            </SortableContext>
           )}
         </main>
 
@@ -92,14 +103,33 @@ function CanvasInstance({
   const api = useEditorStoreApi();
   const def = getComponent(inst.componentDefinitionId);
   const name = def?.name ?? inst.componentDefinitionId;
+  const { setNodeRef, setActivatorNodeRef, listeners, attributes, transform, transition, isDragging } =
+    useSortable({ id: inst.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
 
   return (
     <div
+      ref={setNodeRef}
+      style={style}
       className={`canvas-instance${selected ? " is-selected" : ""}${
         inst.hidden ? " is-hidden" : ""
-      }`}
+      }${isDragging ? " is-dragging" : ""}`}
       data-instance-id={inst.id}
     >
+      <button
+        type="button"
+        ref={setActivatorNodeRef}
+        className="ci-drag"
+        aria-label={`${name} 이동`}
+        {...attributes}
+        {...listeners}
+      >
+        ⠿
+      </button>
       <button
         type="button"
         className="ci-select"

@@ -1,16 +1,17 @@
 "use client";
 
 import {
+  closestCenter,
   DndContext,
   PointerSensor,
   useSensor,
   useSensors,
   type DragEndEvent,
 } from "@dnd-kit/core";
-import { Canvas, CANVAS_DROPPABLE_ID } from "./Canvas";
+import { Canvas } from "./Canvas";
 import { LeftPanel } from "./left/LeftPanel";
-import { PALETTE_DRAG_PREFIX } from "./left/ComponentPalette";
 import { useEditorState, useEditorStoreApi } from "../store/context";
+import { planDrop } from "../lib/dnd-plan";
 
 export function AppShell() {
   const siteName = useEditorState((s) => s.site?.name ?? "");
@@ -20,17 +21,35 @@ export function AppShell() {
 
   function handleDragEnd(e: DragEndEvent) {
     const { active, over } = e;
-    if (!over || over.id !== CANVAS_DROPPABLE_ID) return;
-    const defId = active.data.current?.componentDefinitionId as string | undefined;
-    if (!defId || !String(active.id).startsWith(PALETTE_DRAG_PREFIX)) return;
-    const pageId = api.getState().activePageId;
+    const state = api.getState();
+    const pageId = state.activePageId;
     if (!pageId) return;
-    const instId = api.getState().addComponent(pageId, defId);
-    api.getState().selectComponent(pageId, instId);
+    const page = state.site?.pages.find((p) => p.id === pageId);
+    if (!page) return;
+
+    const componentIds = page.components
+      .slice()
+      .sort((a, b) => a.order - b.order)
+      .map((c) => c.id);
+
+    const plan = planDrop({
+      activeId: String(active.id),
+      componentDefinitionId: active.data.current?.componentDefinitionId as string | undefined,
+      overId: over ? String(over.id) : null,
+      componentIds,
+    });
+    if (!plan) return;
+
+    if (plan.kind === "add") {
+      const instId = api.getState().addComponent(pageId, plan.componentDefinitionId, plan.index);
+      api.getState().selectComponent(pageId, instId);
+    } else {
+      api.getState().reorderComponent(pageId, plan.instanceId, plan.index);
+    }
   }
 
   return (
-    <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
       <div className="editor-shell">
         <header className="topbar">
           <strong className="app-name">KRDS 웹사이트 빌더</strong>

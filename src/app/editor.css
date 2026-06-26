@@ -271,6 +271,32 @@
 .canvas-instance.is-hidden .ci-preview {
   opacity: 0.4;
 }
+.canvas-instance.is-dragging {
+  opacity: 0.6;
+  z-index: 5;
+}
+/* 드래그 핸들(좌상단 그립) */
+.ci-drag {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  z-index: 3;
+  border: 1px solid var(--krds-color-light-gray-30, #b1b8be);
+  background: var(--krds-color-light-gray-0, #fff);
+  border-radius: 4px;
+  font-size: 12px;
+  line-height: 1;
+  padding: 2px 5px;
+  cursor: grab;
+  opacity: 0;
+}
+.canvas-instance:hover .ci-drag,
+.canvas-instance.is-selected .ci-drag {
+  opacity: 1;
+}
+.ci-drag:active {
+  cursor: grabbing;
+}
 /* 본문 위를 덮는 투명 선택 버튼(미리보기 링크 클릭 방지 + 선택) */
 .ci-select {
   position: absolute;
@@ -286,7 +312,7 @@
 .ci-hidden-badge {
   position: absolute;
   top: 4px;
-  left: 4px;
+  left: 38px;
   z-index: 2;
   font-size: 11px;
   background: var(--krds-color-light-gray-60, #58616a);

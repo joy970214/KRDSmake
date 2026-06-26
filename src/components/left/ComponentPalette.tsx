@@ -4,9 +4,7 @@ import Image from "next/image";
 import { useDraggable } from "@dnd-kit/core";
 import { listPlaceableComponents } from "../../registry";
 import type { ComponentDefinition } from "../../registry/types";
-
-// 팔레트에서 드래그를 시작한 카드 식별용 id 접두사 (AppShell onDragEnd에서 파싱).
-export const PALETTE_DRAG_PREFIX = "palette:";
+import { PALETTE_DRAG_PREFIX } from "../../lib/dnd-plan";
 
 // 좌측 "컴포넌트" 탭 — 페이지 본문에 드래그 배치 가능한 카드 목록.
 // 전역 요소(헤더/푸터/공식배너/건너뛰기링크)는 전역 설정에서 편집하므로 제외.
