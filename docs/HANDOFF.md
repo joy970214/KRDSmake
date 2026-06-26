@@ -1,6 +1,6 @@
 # 작업 인수인계 (이어서 진행용)
 
-- 최종 업데이트: 2026-06-26 (좌측 사이드바 LNB 4-3 **완료** 반영)
+- 최종 업데이트: 2026-06-26 (사이트맵 트리 UI/UX 개편 4-4 **완료** 반영)
 - 저장소: `git@github.com:joy970214/KRDSmake.git` (브랜치 `master`)
   ⚠️ 로컬 master가 origin보다 **앞섬(push 안 됨)** — Step4~4-3 커밋들 미푸시
 - 프로젝트: KRDS 기반 공공 웹사이트 빌더 (노코드, 정적 export)
@@ -26,13 +26,22 @@
 | 4+ | 인스턴스 드래그 핸들(`⠿`)로 순서변경 + 드롭 위치 삽입 (커밋 `028a950` "②") | ✅ |
 | **4-2** | **가로 다단 레이아웃 (사용자 보고 #3)** — TDD 1~8단계 + 실브라우저 검증 완료 | ✅ |
 | **4-3** | **페이지 좌측 사이드바(LNB)** — 사이트맵 자동파생 + 페이지별 토글 + 그리드 1200px 이전 | ✅ |
+| **4-4** | **사이트맵 트리 UI/UX 개편** — DnD 재배치 + 활성강조 + 호버액션 + 추가즉시편집/slug자동 | ✅ |
 | 5 | 우측 설정 패널 자동 폼(RHF+Zod) + 실시간 반영 (RHF/Zod 미설치 확인됨) | ⬜ **다음** |
 | 6 | 테마(라이트/선명/시스템) + 디바이스 전환 | ⬜ |
 | 7 | HTML 익스포트 + ZIP 다운로드 | ⬜ |
 
-- 테스트: **153개 통과**(24 파일) · lint 0 · tsc 0 · static export 빌드 성공
+- 테스트: **157개 통과**(25 파일) · lint 0 · tsc 0 · static export 빌드 성공
 - 화면 확인됨: 3패널 에디터 + 팔레트→캔버스 배치/선택/복제/순서변경, **가로 다단(2~4단) 배치**,
-  **좌측 LNB [사이드바|본문] 2칼럼**(scratchpad `f65ad225`: layout-result.png, lnb-desktop.png)
+  **좌측 LNB [사이드바|본문] 2칼럼**, **사이트맵 트리 DnD 재배치/활성강조/호버액션**
+  (scratchpad `f65ad225`: layout-result.png, lnb-desktop.png, tree-dnd.png)
+
+### 4-4. 사이트맵 트리 UI/UX 개편 — 한 것 / 후속
+- 설계 `docs/superpowers/specs/2026-06-26-sitemap-tree-ux-design.md`, 계획 `…/plans/2026-06-26-sitemap-tree-ux.md`. 커밋 `50c0f2a`(flatten/slugify)·`5a2ebbe`(getProjectedDrop)·`bac1a1a`(트리 재작성)·`a8091f8`(DnD).
+- **순수 로직** `src/lib/tree-dnd.ts`: `flattenTree`(평탄화+depth) / `slugify`(영문 slug, 한글→"") / `getProjectedDrop`(dnd-kit 평탄화+수평이동 뎁스투영 → `{parentId,index}|null`, 자손 드롭 제외=순환방지).
+- **`SitemapTree.tsx` 재작성**: 평탄 리스트 + 트리 전용 `DndContext`/`SortableContext`(PointerSensor+KeyboardSensor). 드래그 핸들(⠿) 별도라 제목 클릭 선택 유지. `onDragEnd`→`getProjectedDrop`→`moveNode(id,parentId,index)`(try/catch). 드롭 인디케이터 선.
+- **개선 4종**: ① DnD 재배치(뎁스 변경 포함) ② 현재 페이지 `.is-active` 강조 ③ 액션 버튼 호버/선택 시만 노출(↑↓ 제거) ④ ＋추가 즉시 인라인 편집(제목 autofocus)+slug 자동(`slugDirty`로 수동 우선).
+- ⚠️ **후속**: 키보드로 뎁스 변경/재배치(현재 KeyboardSensor는 세로 재정렬만), 노드 접기/펼치기(collapse), 멀티선택 드래그.
 
 ### 4-3. 좌측 사이드바(LNB) — 한 것 / 설계근거 / 후속
 - 설계: `docs/superpowers/specs/2026-06-26-krds-page-sidebar-lnb-design.md`, 계획: `docs/superpowers/plans/2026-06-26-krds-page-sidebar-lnb.md`. 커밋 `c73fbf1`(buildLnb)·`31e245c`(showSidebar+액션)·`495ac1a`(Canvas+CSS).

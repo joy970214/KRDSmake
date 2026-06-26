@@ -162,7 +162,7 @@ function SitemapRow({
     setTitle(v);
     if (!slugDirty) {
       const s = slugify(v);
-      if (s) setSlug(s);
+      if (s) setSlug(s); // 변환 가능할 때만 자동(한글이면 기존 유지)
     }
   };
   const save = () => {
