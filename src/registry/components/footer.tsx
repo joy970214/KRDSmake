@@ -3,6 +3,13 @@ import type { NavLink } from "../../lib/types";
 import type { ComponentDefinition, Props } from "../types";
 
 // MVP 단순화 푸터. KRDS 푸터(#krds-footer) 핵심: 운영기관·연락처·정책 링크·저작권.
+// 교정된 KRDS 구조 (audit-C.md E4):
+//   기관/주소: <p class="info-addr"> (이전: f-org — 발명된 클래스)
+//   연락처:    <ul class="info-cs"><li><strong class="strong">…</strong></li></ul>
+//              (이전: <address> — 구조·클래스 모두 불일치)
+//   정책링크:  <div class="f-menu"><a href>…</a></div>
+//              (이전: <ul class="f-link"> — f-link는 kit에서 바로가기+SNS 래퍼)
+// 의도적 생략 (백로그): foot-quick, f-logo, f-cnt, link-go, link-sns, f-btm, krds-identifier
 function asLinks(value: unknown): NavLink[] {
   return Array.isArray(value) ? (value as NavLink[]) : [];
 }
@@ -35,24 +42,29 @@ export const footerDefinition: ComponentDefinition = {
     const address = String(props.address ?? "");
     const tel = String(props.tel ?? "");
     const email = String(props.email ?? "");
+    const contactItems = [address, tel, email].filter(Boolean);
     const policy = asLinks(props.policyLinks);
     return (
       <footer id="krds-footer">
         <div className="inner">
           <div className="f-info">
-            <p className="f-org">{String(props.organizationName ?? "")}</p>
-            {address || tel || email ? (
-              <address>{[address, tel, email].filter(Boolean).join(" · ")}</address>
+            <p className="info-addr">{String(props.organizationName ?? "")}</p>
+            {contactItems.length ? (
+              <ul className="info-cs">
+                {contactItems.map((item, i) => (
+                  <li key={i}>
+                    <strong className="strong">{item}</strong>
+                  </li>
+                ))}
+              </ul>
             ) : null}
           </div>
           {policy.length ? (
-            <ul className="f-link">
+            <div className="f-menu">
               {policy.map((l, i) => (
-                <li key={i}>
-                  <a href={l.url}>{l.label}</a>
-                </li>
+                <a key={i} href={l.url}>{l.label}</a>
               ))}
-            </ul>
+            </div>
           ) : null}
           <p className="f-copy">{String(props.copyright ?? "")}</p>
         </div>
@@ -65,25 +77,32 @@ export const footerDefinition: ComponentDefinition = {
       const address = String(props.address ?? "");
       const tel = String(props.tel ?? "");
       const email = String(props.email ?? "");
-      const contact = [address, tel, email].filter(Boolean).join(" · ");
+      const contactItems = [address, tel, email].filter(Boolean);
       const policy = asLinks(props.policyLinks);
-      const addressHtml = contact
-        ? `\n\t\t\t<address>${escapeHtml(contact)}</address>`
+      const contactHtml = contactItems.length
+        ? [
+            `\t\t\t<ul class="info-cs">`,
+            ...contactItems.map(
+              (item) => `\t\t\t\t<li><strong class="strong">${escapeHtml(item)}</strong></li>`,
+            ),
+            `\t\t\t</ul>`,
+          ].join("\n")
         : "";
       const policyHtml = policy.length
         ? [
-            `\t\t<ul class="f-link">`,
+            `\t\t<div class="f-menu">`,
             ...policy.map(
-              (l) => `\t\t\t<li><a href="${attr(l.url)}">${escapeHtml(l.label)}</a></li>`,
+              (l) => `\t\t\t<a href="${attr(l.url)}">${escapeHtml(l.label)}</a>`,
             ),
-            `\t\t</ul>`,
+            `\t\t</div>`,
           ].join("\n")
         : "";
       return [
         `<footer id="krds-footer">`,
         `\t<div class="inner">`,
         `\t\t<div class="f-info">`,
-        `\t\t\t<p class="f-org">${escapeHtml(props.organizationName)}</p>${addressHtml}`,
+        `\t\t\t<p class="info-addr">${escapeHtml(props.organizationName)}</p>`,
+        contactHtml,
         `\t\t</div>`,
         policyHtml,
         `\t\t<p class="f-copy">${escapeHtml(props.copyright)}</p>`,

@@ -21,7 +21,7 @@ exports[`컴포넌트 HTML 익스포트 스냅샷 > footer — 기본 마크업 
 "<footer id="krds-footer">
 	<div class="inner">
 		<div class="f-info">
-			<p class="f-org"></p>
+			<p class="info-addr"></p>
 		</div>
 		<p class="f-copy"></p>
 	</div>
