@@ -37,3 +37,26 @@
 - **ok**: 키트와 일치.
 
 audit 결과/이력은 이 문서 하단 또는 HANDOFF에 누적.
+
+---
+
+## audit 결과 (2026-06-26, 병렬 점검 A/B/C — 전문은 `.superpowers/sdd/audit-{A,B,C}.md`)
+
+### 🔴 error — ✅ 4건 전부 수정 완료 (2026-06-26, TDD)
+| # | 컴포넌트 | 내용 | 상태 |
+|---|---|---|---|
+| E1 | button | primary가 `krds-btn`만 → `krds-btn primary` | ✅ 커밋 `a248676` |
+| E2 | table | `<colgroup><col>` 누락 → columns 수만큼 추가 | ✅ 커밋 `a248676`(스냅샷 `419ab0d`) |
+| E3 | header | `nav.krds-main-menu>ul.gnb-menu`, `header-actions`, `btn-navi sch/login/join/all`, 메뉴=`gnb-main-trigger is-link` | ✅ 커밋 `e3b803d` |
+| E4 | footer | `info-addr`, 연락처 `<ul class="info-cs">`, 정책링크 `f-menu` | ✅ 커밋 `69c8c9e` |
+
+> 교훈: 컴포넌트 마크업을 바꾸면 `src/registry/html-snapshots.test.ts`(`toMatchSnapshot`)가 깨진다 — 의도된 변경이면 `npx vitest run -u`로 갱신하고 diff를 검토할 것.
+
+### 🟡 intentional / 백로그 (의도적 단순화·미구현 — 유지하되 추후)
+- button: 크기 variant(xsmall~xlarge) 미구현(주석 없음 → 주석 추가 권장).
+- header: **2depth+ GNB 플라이아웃 전체 미구현**(gnb-main-trigger/gnb-toggle-wrap/gnb-sub-list).
+- footer: **SNS(link-sns)·인증마크(krds-identifier)·관련사이트(foot-quick) 전체 미구현.**
+- 폼 컴포넌트 미구현: **select / radio / checkbox / textarea / date** (KRDS 폼 입력 종류) — 컴포넌트 확충 백로그.
+
+### 🟢 ok
+- skip-link, image, masthead: 키트와 일치. input-form(텍스트)·card(구조화목록 기반)·table(colgroup 제외)·button(secondary/tertiary) 구조 일치.
