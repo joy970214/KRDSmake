@@ -133,3 +133,45 @@ describe("다단 레이아웃 캔버스 렌더링", () => {
     expect(layout.columns![0]).toHaveLength(0);
   });
 });
+
+// 헬퍼: 홈 외 섹션 + 하위 페이지 생성 → 하위 페이지 id 반환
+function addSectionWithChild() {
+  const svc = store.getState().addSitemapNode({ title: "서비스", slug: "service" });
+  const intro = store.getState().addSitemapNode({ title: "소개", slug: "intro", parentId: svc });
+  const introPage = store.getState().site!.pages.find((p) => p.sitemapNodeId === intro)!;
+  return { introPageId: introPage.id };
+}
+
+describe("페이지 사이드바(LNB)", () => {
+  it("비홈 하위 페이지는 기본(미설정)으로 사이드바가 보이고 섹션 제목/활성항목을 표시한다", () => {
+    const { introPageId } = addSectionWithChild();
+    store.getState().setActivePage(introPageId);
+    const { container } = renderCanvas();
+    expect(container.querySelector(".lnb")).not.toBeNull();
+    expect(container.querySelector(".lnb-title")?.textContent).toBe("서비스");
+    expect(container.querySelector(".lnb-link.is-active")?.textContent).toBe("소개");
+  });
+
+  it("showSidebar=false면 사이드바가 사라진다", () => {
+    const { introPageId } = addSectionWithChild();
+    store.getState().setActivePage(introPageId);
+    store.getState().setPageSidebar(introPageId, false);
+    const { container } = renderCanvas();
+    expect(container.querySelector(".lnb")).toBeNull();
+  });
+
+  it("홈에서는 기본 켜짐이어도 사이드바가 없다", () => {
+    addSectionWithChild();
+    // 활성 페이지 미설정 → Canvas는 pages[0](홈)로 폴백
+    const { container } = renderCanvas();
+    expect(container.querySelector(".lnb")).toBeNull();
+  });
+
+  it("토글 체크박스가 store.showSidebar를 끈다", () => {
+    const { introPageId } = addSectionWithChild();
+    store.getState().setActivePage(introPageId);
+    renderCanvas();
+    fireEvent.click(screen.getByRole("checkbox", { name: "사이드바 표시" }));
+    expect(store.getState().site!.pages.find((p) => p.id === introPageId)!.showSidebar).toBe(false);
+  });
+});

@@ -356,8 +356,7 @@
   display: grid;
   grid-template-columns: repeat(var(--cols, 2), 1fr);
   gap: 24px;
-  max-width: 1200px;
-  margin: 0 auto;
+  width: 100%;
 }
 .krds-grid-col {
   min-height: 64px;
@@ -384,5 +383,76 @@
 @media (max-width: 767px) {
   .krds-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+/* 페이지 프레임: 1200px·거터 책임을 블록이 아닌 여기로 (KRDS style_05) */
+.page-frame {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+}
+.page-frame > .canvas-page {
+  flex: 1 1 auto;
+  min-width: 0; /* 그리드 자식이 넘치지 않도록 */
+}
+.canvas-page-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.sidebar-toggle {
+  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  color: var(--krds-color-light-gray-70, #464c53);
+}
+/* 좌측 LNB */
+.lnb {
+  flex: 0 0 240px;
+  border: 1px solid var(--krds-color-light-gray-30, #b1b8be);
+  border-radius: 8px;
+  padding: 16px;
+}
+.lnb-title {
+  margin: 0 0 12px;
+  font-weight: 700;
+}
+.lnb-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.lnb-list .lnb-list {
+  padding-left: 12px;
+}
+.lnb-link {
+  display: block;
+  padding: 6px 8px;
+  color: var(--krds-color-light-gray-90, #1e2124);
+  text-decoration: none;
+  border-radius: 4px;
+}
+.lnb-link:hover {
+  background: var(--krds-color-light-gray-5, #f4f5f6);
+}
+.lnb-link.is-active {
+  color: var(--krds-color-light-primary-50, #256ef4);
+  font-weight: 700;
+  background: var(--krds-color-light-primary-5, #eaf2fe);
+}
+/* 모바일: 사이드바가 본문 위로 1단 스택 */
+@media (max-width: 767px) {
+  .page-frame {
+    flex-direction: column;
+  }
+  .lnb {
+    flex-basis: auto;
+    width: 100%;
   }
 }

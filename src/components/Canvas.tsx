@@ -11,7 +11,8 @@ import { getComponent } from "../registry";
 import type { PreviewCtx } from "../registry/types";
 import { useEditorState, useEditorStoreApi } from "../store/context";
 import { CANVAS_DROPPABLE_ID, columnDroppableId } from "../lib/dnd-plan";
-import type { ComponentInstance } from "../lib/types";
+import { buildLnb } from "../lib/lnb";
+import type { ComponentInstance, SitemapNode } from "../lib/types";
 
 export { CANVAS_DROPPABLE_ID } from "../lib/dnd-plan";
 
@@ -22,6 +23,7 @@ export function Canvas() {
   const activePageId = useEditorState((s) => s.activePageId);
   const selection = useEditorState((s) => s.selection);
   const { setNodeRef, isOver } = useDroppable({ id: CANVAS_DROPPABLE_ID });
+  const api = useEditorStoreApi();
   if (!site) return null;
 
   const page = site.pages.find((p) => p.id === activePageId) ?? site.pages[0];
@@ -37,6 +39,9 @@ export function Canvas() {
   const header = getComponent("header");
   const footer = getComponent("footer");
 
+  const showSidebar = (page.showSidebar ?? true);
+  const lnb = buildLnb(site.sitemap, page.sitemapNodeId);
+
   const components = page.components.slice().sort((a, b) => a.order - b.order);
   const selectedId =
     selection?.kind === "component" ? selection.instanceId : null;
@@ -49,12 +54,30 @@ export function Canvas() {
           : null}
         {header ? header.Preview({ props: site.globalLayout.header, ctx }) : null}
 
+        <div className="page-frame">
+        {showSidebar && lnb ? (
+          <aside className="lnb" aria-label="좌측 메뉴">
+            <p className="lnb-title">{lnb.sectionTitle}</p>
+            <LnbList items={lnb.items} activeNodeId={lnb.activeNodeId} />
+          </aside>
+        ) : null}
+
         <main
           ref={setNodeRef}
           className={`canvas-page${isOver ? " is-drop-over" : ""}`}
           aria-label="페이지 본문(컴포넌트 드롭 영역)"
         >
-          <h2 className="canvas-page-title">{page.title}</h2>
+          <div className="canvas-page-head">
+            <h2 className="canvas-page-title">{page.title}</h2>
+            <label className="sidebar-toggle">
+              <input
+                type="checkbox"
+                checked={showSidebar}
+                onChange={(e) => api.getState().setPageSidebar(page.id, e.target.checked)}
+              />
+              사이드바 표시
+            </label>
+          </div>
           {components.length === 0 ? (
             <p className="empty-guide">
               좌측의 컴포넌트를 이 영역으로 드래그하여 페이지를 구성하세요.
@@ -78,6 +101,7 @@ export function Canvas() {
             </SortableContext>
           )}
         </main>
+        </div>
 
         {footer ? footer.Preview({ props: site.globalLayout.footer, ctx }) : null}
       </div>
@@ -283,6 +307,35 @@ function ColumnDropZone({
         ))
       )}
     </div>
+  );
+}
+
+// LNB(좌측 메뉴) 항목을 중첩 ul로 렌더. 에디터에선 비탐색(읽기 전용).
+function LnbList({
+  items,
+  activeNodeId,
+}: {
+  items: SitemapNode[];
+  activeNodeId: string;
+}) {
+  return (
+    <ul className="lnb-list">
+      {items.map((n) => (
+        <li key={n.id}>
+          <a
+            className={`lnb-link${n.id === activeNodeId ? " is-active" : ""}`}
+            href={n.path}
+            aria-current={n.id === activeNodeId ? "page" : undefined}
+            onClick={(e) => e.preventDefault()}
+          >
+            {n.title}
+          </a>
+          {n.children && n.children.length > 0 ? (
+            <LnbList items={n.children} activeNodeId={activeNodeId} />
+          ) : null}
+        </li>
+      ))}
+    </ul>
   );
 }
 
