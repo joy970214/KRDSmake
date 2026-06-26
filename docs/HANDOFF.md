@@ -30,7 +30,7 @@
 | 6 | 테마(라이트/선명/시스템) + 디바이스 전환 | ⬜ |
 | 7 | HTML 익스포트 + ZIP 다운로드 | ⬜ |
 
-- 테스트: **150개 통과**(24 파일) · lint 0 · tsc 0 · static export 빌드 성공
+- 테스트: **153개 통과**(24 파일) · lint 0 · tsc 0 · static export 빌드 성공
 - 화면 확인됨: 3패널 에디터 + 팔레트→캔버스 배치/선택/복제/순서변경, **가로 다단(2~4단) 배치**,
   **좌측 LNB [사이드바|본문] 2칼럼**(scratchpad `f65ad225`: layout-result.png, lnb-desktop.png)
 
@@ -40,11 +40,11 @@
 - **스타일 = KRDS 공식 사이드 메뉴**(component_03_04, 커밋 `32432b4`): `nav.krds-side-navigation > h2.lnb-tit + ul.lnb-list > li.lnb-item(.lnb-btn.lnb-toggle|lnb-link) > .lnb-submenu > li.lnb-subitem`. 스타일은 **벤더 output.css가 담당**(앱이 이미 로드) — 커스텀 LNB CSS 없음. 현재 페이지 가지를 `active`로 펼침(KRDS JS 없이 클래스로), 활성=`aria-current="page"`+`selected`. 4depth↑는 3depth 목록에 평면 합침(KRDS 권장 ≤2단).
   - ⚠️ **익스포트(Step 7)**: 비활성 메뉴 토글 펼침/접힘 클릭은 KRDS JS(`vendor/krds/.../ui-script.js` 또는 `krds.min.js`)가 필요 — export HTML에 KRDS JS 배선 필요. 에디터 미리보기는 active 가지만 정적 펼침이라 JS 불필요.
 - **노출**: `Page.showSidebar?`(미설정=켜짐). 표시판정 `(showSidebar ?? true) && buildLnb≠null` → **홈 외 기본 켜짐**(홈은 buildLnb null로 자동 숨김). 토글=캔버스 상단 "사이드바 표시" 체크박스 → `setPageSidebar`.
-- **레이아웃**: 헤더/푸터 사이 `.page-frame`(max-width **1200px**·`margin:auto`·flex·gap24)에 `<aside.lnb>`(240px)+`<main.canvas-page>`. **1200px 제약을 `.krds-grid` 블록에서 `.page-frame`로 이전**(블록은 `width:100%`) → 사이드바로 본문 좁아져도 다단블록 정상. 모바일(<768px) 1단 스택(미디어쿼리).
+- **레이아웃**: 헤더/푸터 사이 `.page-frame`(max-width **1200px**·`margin:auto`·flex·gap24)에 `<nav.krds-side-navigation>`(260px)+`<main.canvas-page>`. **1200px 제약을 `.krds-grid` 블록에서 `.page-frame`로 이전**(블록은 `width:100%`) → 사이드바로 본문 좁아져도 다단블록 정상. 모바일(<768px) 1단 스택(미디어쿼리).
 - **LNB는 읽기전용**(링크 preventDefault, ComponentInstance 아님 — 선택/드롭/익스포트 대상 아님).
 - ⚠️ **후속/주의**:
   1. **토글의 Step 5 이전**: 캔버스 상단 "사이드바 표시"는 임시 진입점 → Step 5 우측 자동 폼에 `showSidebar` 필드로 옮길 것.
-  2. **홈에서도 토글 체크박스가 보이지만 효과 없음**(buildLnb null). UX 폴리시: 홈/표시불가 페이지에선 토글 숨기거나 안내. (현재 무해)
+  2. ~~홈에서도 토글 체크박스가 보이지만 효과 없음~~ → ✅ 해결(커밋 `e60fc28`): `lnb≠null`일 때만 토글 노출(홈·하위없는 단독메뉴는 숨김).
   3. **익스포트 LNB 주입은 Step 7**: 현재 `.page-frame`/LNB는 에디터 캔버스에만. HTML 익스포트에 반영 필요.
   4. 모바일 1단 스택은 에디터 셸(데스크톱 고정)에선 육안확인 불가 — Step 6 디바이스 프리뷰/익스포트에서 의미.
 
