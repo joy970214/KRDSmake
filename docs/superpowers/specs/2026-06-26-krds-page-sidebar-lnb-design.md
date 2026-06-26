@@ -36,8 +36,20 @@
 ## 데이터 모델
 
 - `Page`에 `showSidebar?: boolean` 추가(`src/lib/types.ts`).
-  - optional: 옛 영속 데이터(IndexedDB)엔 필드가 없으므로 `=== true`로만 표시 판단.
-  - 신규 페이지 기본값 `false`(명시적 opt-in). `createSite`/store 페이지 생성부에서 `false` 설정.
+  - **기본값 = 홈 외 켜짐.** 구현은 *미설정(undefined)을 켜짐으로 간주*(`page.showSidebar ?? true`).
+    - 신규 페이지는 굳이 값을 세팅하지 않는다(undefined → 켜짐).
+    - 홈 페이지는 값과 무관하게 `buildLnb`가 `null`을 반환(아래 파생 로직)하므로 LNB가 표시되지 않는다.
+    - 사용자가 끄면 비로소 `false`가 명시적으로 저장된다.
+  - optional이라 옛 영속 데이터(IndexedDB, 필드 없음)에도 동일 규칙이 자연스럽게 적용된다(undefined → 켜짐).
+
+### 기본값 동작 설명 (말로 설명할 수 있게)
+
+> "**홈을 제외한 모든 페이지는 사이드바가 기본으로 켜져 있습니다.** 단, 보여줄 메뉴가 실제로
+> 있을 때만(= 해당 페이지가 속한 섹션에 하위 페이지가 있을 때만) 사이드바가 나타납니다.
+> 홈, 또는 하위 페이지가 없는 단독 섹션에서는 켜져 있어도 자동으로 숨겨집니다.
+> 특정 페이지에서 끄고 싶으면 캔버스 상단의 '사이드바 표시' 체크를 해제하면 됩니다."
+
+- 표시 최종 판정식: `(page.showSidebar ?? true) && buildLnb(...) !== null`
 
 ## 파생 로직 — `src/lib/lnb.ts` (순수)
 
@@ -78,17 +90,18 @@ Canvas 구조(헤더와 푸터 사이) 변경:
 ## 토글 UI
 
 - Canvas 페이지 제목 옆 체크박스 라벨 **"사이드바 표시"** → `onChange`에서 `setPageSidebar(activePageId, checked)`.
-- 현재 페이지의 `showSidebar`를 구독해 체크 상태 반영.
+- 체크 상태 = `page.showSidebar ?? true`(기본 켜짐 반영).
 
 ## 테스트 / 검증 (TDD)
 
-1. **모델**: `Page.showSidebar?` 추가 + 신규 페이지 기본 `false` — 컴파일 + 생성 기본값 테스트.
+1. **모델**: `Page.showSidebar?` 추가(컴파일 토대). 기본값은 코드 상수가 아니라 `?? true` 규칙이라
+   별도 생성 기본값 세팅은 없음 — 표시 판정 테스트(4단계)에서 함께 검증.
 2. **`lib/lnb.ts buildLnb`**: 순수 함수 — RED→green.
    - 케이스: 섹션 하위 트리 파생 / 현재 페이지 강조 / 홈은 null / 자식 없는 섹션은 null / 깊은(2단+) 트리.
 3. **store `setPageSidebar`**: RED→green — 플래그 토글, 다른 페이지 영향 없음.
-4. **Canvas**: `showSidebar` + 파생 결과 있을 때 `<aside.lnb>` 렌더 / 토글 컨트롤이 store 갱신 /
-   off거나 홈이면 미렌더. CSS 이동 후 **헤드리스 실브라우저로 [사이드바|본문] 2칼럼 + 다단 블록이
-   좁은 본문폭에 맞는지** 검증.
+4. **Canvas**: 기본(미설정) 비홈 페이지+파생결과 있을 때 `<aside.lnb>` 렌더(기본 켜짐 확인) /
+   `showSidebar=false`면 미렌더 / 홈이면 미렌더 / 토글 컨트롤이 store 갱신. CSS 이동 후
+   **헤드리스 실브라우저로 [사이드바|본문] 2칼럼 + 다단 블록이 좁은 본문폭에 맞는지** 검증.
 
 ## 이번에 빼는 것 (후속/백로그)
 
