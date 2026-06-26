@@ -154,6 +154,17 @@
   border-radius: 3px;
   padding: 1px 4px;
 }
+.node-cat-badge {
+  font-size: 10px;
+  background: var(--krds-color-light-gray-60, #58616a);
+  color: #fff;
+  border-radius: 3px;
+  padding: 1px 4px;
+}
+.node-cat-toggle.is-on {
+  background: var(--krds-color-light-primary-5, #eaf2fe);
+  border-color: var(--krds-color-light-primary-50, #256ef4);
+}
 /* 액션은 평소 숨김, 호버/선택 시 노출 */
 .node-actions {
   margin-left: auto;

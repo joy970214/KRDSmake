@@ -56,4 +56,40 @@ describe("SitemapTree", () => {
     fireEvent.click(screen.getByRole("button", { name: "서비스" }));
     expect(store.getState().activePageId).toBe(pageId);
   });
+
+  it("하위가 있는 노드에만 카테고리 토글 버튼이 보인다", () => {
+    const svc = store.getState().addSitemapNode({ title: "서비스", slug: "service" });
+    store.getState().addSitemapNode({ title: "소개", slug: "intro", parentId: svc });
+    renderTree();
+    expect(screen.getByRole("button", { name: "서비스 카테고리 지정" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "소개 카테고리 지정" })).toBeNull();
+  });
+
+  it("카테고리 토글이 isCategory를 켠다", () => {
+    const svc = store.getState().addSitemapNode({ title: "서비스", slug: "service" });
+    store.getState().addSitemapNode({ title: "소개", slug: "intro", parentId: svc });
+    renderTree();
+    fireEvent.click(screen.getByRole("button", { name: "서비스 카테고리 지정" }));
+    expect(store.getState().site!.sitemap.find((nn) => nn.id === svc)!.isCategory).toBe(true);
+  });
+
+  it("카테고리 노드 제목 클릭은 첫 하위 페이지를 활성화한다", () => {
+    const svc = store.getState().addSitemapNode({ title: "서비스", slug: "service" });
+    const intro = store.getState().addSitemapNode({ title: "소개", slug: "intro", parentId: svc });
+    store.getState().setNodeCategory(svc, true);
+    const introPageId = store.getState().site!.sitemap
+      .find((nn) => nn.id === svc)!
+      .children!.find((c) => c.id === intro)!.pageId;
+    renderTree();
+    fireEvent.click(screen.getByRole("button", { name: "서비스" }));
+    expect(store.getState().activePageId).toBe(introPageId);
+  });
+
+  it("카테고리 노드에는 카테고리 배지가 보인다", () => {
+    const svc = store.getState().addSitemapNode({ title: "서비스", slug: "service" });
+    store.getState().addSitemapNode({ title: "소개", slug: "intro", parentId: svc });
+    store.getState().setNodeCategory(svc, true);
+    const { container } = renderTree();
+    expect(container.querySelector(".node-cat-badge")).not.toBeNull();
+  });
 });

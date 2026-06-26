@@ -21,6 +21,8 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { flattenTree, slugify, getProjectedDrop } from "../../lib/tree-dnd";
 import { useEditorState, useEditorStoreApi } from "../../store/context";
+import { resolveTargetPageId } from "../../lib/sitemap";
+import type { SitemapNode } from "../../lib/types";
 
 // 투영된 parentId의 깊이 = 들여쓰기 칸 수(루트=0). 인디케이터 위치용.
 function indicatorDepthFor(
@@ -110,6 +112,7 @@ export function SitemapTree() {
               <SitemapRow
                 key={f.id}
                 flat={f}
+                sitemap={sitemap}
                 indent={INDENT}
                 active={f.node.pageId === activePageId}
                 editing={editingId === f.id}
@@ -129,6 +132,7 @@ export function SitemapTree() {
 
 function SitemapRow({
   flat,
+  sitemap,
   indent,
   active,
   editing,
@@ -139,6 +143,7 @@ function SitemapRow({
   addChild,
 }: {
   flat: import("../../lib/tree-dnd").FlatNode;
+  sitemap: SitemapNode[];
   indent: number;
   active: boolean;
   editing: boolean;
@@ -224,13 +229,29 @@ function SitemapRow({
             <button
               type="button"
               className="node-title"
-              onClick={() => api.getState().setActivePage(node.pageId)}
+              onClick={() =>
+                api.getState().setActivePage(
+                  node.isCategory ? resolveTargetPageId(sitemap, node.id) : node.pageId,
+                )
+              }
             >
               {node.title}
             </button>
             {node.isHome ? <span className="node-home-badge">대표</span> : null}
+            {node.isCategory ? <span className="node-cat-badge">카테고리</span> : null}
             <code className="node-path">{node.path}</code>
             <span className="node-actions">
+              {node.children && node.children.length > 0 ? (
+                <button
+                  type="button"
+                  className={`node-cat-toggle${node.isCategory ? " is-on" : ""}`}
+                  aria-pressed={!!node.isCategory}
+                  aria-label={`${node.title} 카테고리 ${node.isCategory ? "해제" : "지정"}`}
+                  onClick={() => api.getState().setNodeCategory(node.id, !node.isCategory)}
+                >
+                  🗂
+                </button>
+              ) : null}
               <button type="button" onClick={addChild} aria-label={`${node.title} 하위 추가`}>
                 ＋
               </button>
