@@ -56,10 +56,14 @@ export function Canvas() {
 
         <div className="page-frame">
         {showSidebar && lnb ? (
-          <aside className="lnb" aria-label="좌측 메뉴">
-            <p className="lnb-title">{lnb.sectionTitle}</p>
-            <LnbList items={lnb.items} activeNodeId={lnb.activeNodeId} />
-          </aside>
+          <nav className="krds-side-navigation" aria-label="좌측 메뉴">
+            <h2 className="lnb-tit">{lnb.sectionTitle}</h2>
+            <ul className="lnb-list" role="menubar">
+              {lnb.items.map((n) => (
+                <LnbItem key={n.id} node={n} activeNodeId={lnb.activeNodeId} />
+              ))}
+            </ul>
+          </nav>
         ) : null}
 
         <main
@@ -311,31 +315,91 @@ function ColumnDropZone({
 }
 
 // LNB(좌측 메뉴) 항목을 중첩 ul로 렌더. 에디터에선 비탐색(읽기 전용).
-function LnbList({
-  items,
+// 대상 노드가 이 서브트리(자기 포함)에 있는지 — 현재 페이지가 속한 가지 펼침 판정용.
+function containsNode(node: SitemapNode, id: string): boolean {
+  if (node.id === id) return true;
+  return (node.children ?? []).some((c) => containsNode(c, id));
+}
+
+// KRDS 사이드 메뉴 2depth 항목(.lnb-item). 자식 있으면 토글+서브메뉴, 없으면 링크.
+// 에디터엔 KRDS JS가 없어 펼침은 클래스로만 처리 — 현재 페이지가 속한 가지를 active로 펼친다.
+function LnbItem({
+  node,
   activeNodeId,
 }: {
-  items: SitemapNode[];
+  node: SitemapNode;
   activeNodeId: string;
 }) {
+  const children = node.children ?? [];
+  const isActiveSelf = node.id === activeNodeId;
+
+  if (children.length === 0) {
+    return (
+      <li className={`lnb-item${isActiveSelf ? " active" : ""}`} role="none">
+        <a
+          className={`lnb-btn lnb-link${isActiveSelf ? " active selected" : ""}`}
+          href={node.path}
+          role="menuitem"
+          aria-current={isActiveSelf ? "page" : undefined}
+          onClick={(e) => e.preventDefault()}
+        >
+          {node.title}
+        </a>
+      </li>
+    );
+  }
+
+  const onActiveBranch = containsNode(node, activeNodeId);
   return (
-    <ul className="lnb-list">
-      {items.map((n) => (
-        <li key={n.id}>
-          <a
-            className={`lnb-link${n.id === activeNodeId ? " is-active" : ""}`}
-            href={n.path}
-            aria-current={n.id === activeNodeId ? "page" : undefined}
-            onClick={(e) => e.preventDefault()}
-          >
-            {n.title}
-          </a>
-          {n.children && n.children.length > 0 ? (
-            <LnbList items={n.children} activeNodeId={activeNodeId} />
-          ) : null}
-        </li>
+    <li className={`lnb-item${onActiveBranch ? " active" : ""}`} role="none">
+      <button
+        type="button"
+        className={`lnb-btn lnb-toggle${onActiveBranch ? " active" : ""}`}
+        role="menuitem"
+        aria-expanded={onActiveBranch}
+        onClick={(e) => e.preventDefault()}
+      >
+        {node.title}
+      </button>
+      <div className="lnb-submenu">
+        <ul role="menu">
+          {children.map((c) => (
+            <LnbSubItem key={c.id} node={c} activeNodeId={activeNodeId} />
+          ))}
+        </ul>
+      </div>
+    </li>
+  );
+}
+
+// KRDS 사이드 메뉴 3depth 항목(.lnb-subitem). 4depth 이상은 KRDS 슬라이드 팝업 대신
+// 같은 목록에 평면으로 합친다(설계 결정 — KRDS 권장 깊이 ≤2단).
+function LnbSubItem({
+  node,
+  activeNodeId,
+}: {
+  node: SitemapNode;
+  activeNodeId: string;
+}) {
+  const isActive = node.id === activeNodeId;
+  const children = node.children ?? [];
+  return (
+    <>
+      <li className={`lnb-subitem${isActive ? " active" : ""}`} role="none">
+        <a
+          className={`lnb-btn lnb-link${isActive ? " selected" : ""}`}
+          href={node.path}
+          role="menuitem"
+          aria-current={isActive ? "page" : undefined}
+          onClick={(e) => e.preventDefault()}
+        >
+          {node.title}
+        </a>
+      </li>
+      {children.map((g) => (
+        <LnbSubItem key={g.id} node={g} activeNodeId={activeNodeId} />
       ))}
-    </ul>
+    </>
   );
 }
 

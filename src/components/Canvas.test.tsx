@@ -147,9 +147,12 @@ describe("페이지 사이드바(LNB)", () => {
     const { introPageId } = addSectionWithChild();
     store.getState().setActivePage(introPageId);
     const { container } = renderCanvas();
-    expect(container.querySelector(".lnb")).not.toBeNull();
-    expect(container.querySelector(".lnb-title")?.textContent).toBe("서비스");
-    expect(container.querySelector(".lnb-link.is-active")?.textContent).toBe("소개");
+    // KRDS 사이드 메뉴(Side navigation) 공식 마크업
+    expect(container.querySelector("nav.krds-side-navigation")).not.toBeNull();
+    expect(container.querySelector(".lnb-tit")?.textContent).toBe("서비스");
+    expect(container.querySelector(".lnb-list .lnb-item")).not.toBeNull();
+    // 현재 페이지는 aria-current="page"로 강조
+    expect(container.querySelector('[aria-current="page"]')?.textContent).toBe("소개");
   });
 
   it("showSidebar=false면 사이드바가 사라진다", () => {
@@ -157,14 +160,14 @@ describe("페이지 사이드바(LNB)", () => {
     store.getState().setActivePage(introPageId);
     store.getState().setPageSidebar(introPageId, false);
     const { container } = renderCanvas();
-    expect(container.querySelector(".lnb")).toBeNull();
+    expect(container.querySelector(".krds-side-navigation")).toBeNull();
   });
 
   it("홈에서는 기본 켜짐이어도 사이드바가 없다", () => {
     addSectionWithChild();
     // 활성 페이지 미설정 → Canvas는 pages[0](홈)로 폴백
     const { container } = renderCanvas();
-    expect(container.querySelector(".lnb")).toBeNull();
+    expect(container.querySelector(".krds-side-navigation")).toBeNull();
   });
 
   it("토글 체크박스가 store.showSidebar를 끈다", () => {

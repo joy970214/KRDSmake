@@ -412,46 +412,17 @@
   white-space: nowrap;
   color: var(--krds-color-light-gray-70, #464c53);
 }
-/* 좌측 LNB */
-.lnb {
-  flex: 0 0 240px;
-  border: 1px solid var(--krds-color-light-gray-30, #b1b8be);
-  border-radius: 8px;
-  padding: 16px;
-}
-.lnb-title {
-  margin: 0 0 12px;
-  font-weight: 700;
-}
-.lnb-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-.lnb-list .lnb-list {
-  padding-left: 12px;
-}
-.lnb-link {
-  display: block;
-  padding: 6px 8px;
-  color: var(--krds-color-light-gray-90, #1e2124);
-  text-decoration: none;
-  border-radius: 4px;
-}
-.lnb-link:hover {
-  background: var(--krds-color-light-gray-5, #f4f5f6);
-}
-.lnb-link.is-active {
-  color: var(--krds-color-light-primary-50, #256ef4);
-  font-weight: 700;
-  background: var(--krds-color-light-primary-5, #eaf2fe);
+/* 좌측 LNB = KRDS 공식 사이드 메뉴(.krds-side-navigation). 스타일은 벤더 output.css가
+   담당하고, 여기선 페이지 프레임 안에서의 폭/정렬만 지정한다. */
+.page-frame > .krds-side-navigation {
+  flex: 0 0 260px;
 }
 /* 모바일: 사이드바가 본문 위로 1단 스택 */
 @media (max-width: 767px) {
   .page-frame {
     flex-direction: column;
   }
-  .lnb {
+  .page-frame > .krds-side-navigation {
     flex-basis: auto;
     width: 100%;
   }
