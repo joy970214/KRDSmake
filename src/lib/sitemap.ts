@@ -21,3 +21,32 @@ export function recomputePaths(nodes: SitemapNode[]): SitemapNode[] {
     });
   return walk(nodes, "/");
 }
+
+// id로 노드 찾기(트리 재귀).
+function findNode(list: SitemapNode[], id: string): SitemapNode | undefined {
+  for (const node of list) {
+    if (node.id === id) return node;
+    const found = node.children ? findNode(node.children, id) : undefined;
+    if (found) return found;
+  }
+  return undefined;
+}
+
+// 전위(pre-order) 탐색으로 첫 '비-카테고리' 노드의 pageId. 없으면 undefined.
+function firstContentDescendant(list: SitemapNode[]): string | undefined {
+  for (const node of list) {
+    if (!node.isCategory) return node.pageId;
+    const deeper = firstContentDescendant(node.children ?? []);
+    if (deeper) return deeper;
+  }
+  return undefined;
+}
+
+// 카테고리 노드가 실제로 보여줄 페이지 id. 카테고리가 아니면 자기 페이지,
+// 카테고리면 첫 비-카테고리 하위, 그것도 없으면 자기 페이지로 폴백. 노드 없으면 입력 반환.
+export function resolveTargetPageId(sitemap: SitemapNode[], nodeId: string): string {
+  const node = findNode(sitemap, nodeId);
+  if (!node) return nodeId;
+  if (!node.isCategory) return node.pageId;
+  return firstContentDescendant(node.children ?? []) ?? node.pageId;
+}

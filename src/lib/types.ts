@@ -45,6 +45,7 @@ export type SitemapNode = {
   children?: SitemapNode[];
   pageId: string; // 1:1 대응 페이지
   isHome?: boolean;
+  isCategory?: boolean; // true면 자체 콘텐츠 없이 첫 하위 콘텐츠 페이지로 보냄(섹션 랜딩)
 };
 
 export type Page = {
