@@ -1,8 +1,35 @@
 "use client";
 
 import { useState } from "react";
-import { flattenTree, slugify } from "../../lib/tree-dnd";
+import {
+  DndContext,
+  PointerSensor,
+  KeyboardSensor,
+  useSensor,
+  useSensors,
+  type DragStartEvent,
+  type DragMoveEvent,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy,
+  sortableKeyboardCoordinates,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { flattenTree, slugify, getProjectedDrop } from "../../lib/tree-dnd";
 import { useEditorState, useEditorStoreApi } from "../../store/context";
+
+// 투영된 parentId의 깊이 = 들여쓰기 칸 수(루트=0). 인디케이터 위치용.
+function indicatorDepthFor(
+  flat: import("../../lib/tree-dnd").FlatNode[],
+  proj: { parentId: string | undefined; index: number },
+): number {
+  if (!proj.parentId) return 0;
+  const parent = flat.find((f) => f.id === proj.parentId);
+  return parent ? parent.depth + 1 : 0;
+}
 
 export function SitemapTree() {
   const sitemap = useEditorState((s) => s.site?.sitemap ?? []);
@@ -12,6 +39,43 @@ export function SitemapTree() {
   const [editingId, setEditingId] = useState<string | null>(null);
 
   const flat = flattenTree(sitemap);
+
+  const INDENT = 14;
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const [offsetX, setOffsetX] = useState(0);
+  const [overId, setOverId] = useState<string | null>(null);
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+
+  const projected =
+    activeId && overId ? getProjectedDrop(flat, activeId, overId, offsetX, INDENT) : null;
+
+  const onDragStart = (e: DragStartEvent) => {
+    setActiveId(String(e.active.id));
+    setOverId(String(e.active.id));
+    setOffsetX(0);
+  };
+  const onDragMove = (e: DragMoveEvent) => {
+    setOffsetX(e.delta.x);
+    setOverId(e.over ? String(e.over.id) : null);
+  };
+  const onDragEnd = (e: DragEndEvent) => {
+    const id = String(e.active.id);
+    const over = e.over ? String(e.over.id) : null;
+    const proj = over ? getProjectedDrop(flat, id, over, e.delta.x, INDENT) : null;
+    setActiveId(null);
+    setOverId(null);
+    setOffsetX(0);
+    if (proj) {
+      try {
+        api.getState().moveNode(id, proj.parentId, proj.index);
+      } catch {
+        /* 자기/자손 아래 이동 등은 무시 */
+      }
+    }
+  };
 
   // 새 노드 추가 후 즉시 편집모드. slug 기본은 menu-<전체노드수+1>.
   const addNew = (parentId?: string) => {
@@ -28,34 +92,60 @@ export function SitemapTree() {
           ＋ 메뉴 추가
         </button>
       </div>
-      <ul className="sitemap-tree">
-        {flat.map((f) => (
-          <SitemapRow
-            key={f.id}
-            flat={f}
-            active={f.node.pageId === activePageId}
-            editing={editingId === f.id}
-            startEdit={() => setEditingId(f.id)}
-            stopEdit={() => setEditingId(null)}
-            addChild={() => addNew(f.id)}
-          />
-        ))}
-      </ul>
+      <DndContext
+        sensors={sensors}
+        onDragStart={onDragStart}
+        onDragMove={onDragMove}
+        onDragEnd={onDragEnd}
+        onDragCancel={() => {
+          setActiveId(null);
+          setOverId(null);
+        }}
+      >
+        <SortableContext items={flat.map((f) => f.id)} strategy={verticalListSortingStrategy}>
+          <ul className="sitemap-tree">
+            {flat.map((f) => (
+              <SitemapRow
+                key={f.id}
+                flat={f}
+                indent={INDENT}
+                active={f.node.pageId === activePageId}
+                editing={editingId === f.id}
+                dropDepth={
+                  activeId && projected && overId === f.id ? projected.parentId : undefined
+                }
+                showIndicator={!!activeId && overId === f.id && !!projected}
+                indicatorDepth={projected ? indicatorDepthFor(flat, projected) : 0}
+                startEdit={() => setEditingId(f.id)}
+                stopEdit={() => setEditingId(null)}
+                addChild={() => addNew(f.id)}
+              />
+            ))}
+          </ul>
+        </SortableContext>
+      </DndContext>
     </div>
   );
 }
 
 function SitemapRow({
   flat,
+  indent,
   active,
   editing,
+  showIndicator,
+  indicatorDepth,
   startEdit,
   stopEdit,
   addChild,
 }: {
   flat: import("../../lib/tree-dnd").FlatNode;
+  indent: number;
   active: boolean;
   editing: boolean;
+  dropDepth?: string | undefined;
+  showIndicator: boolean;
+  indicatorDepth: number;
   startEdit: () => void;
   stopEdit: () => void;
   addChild: () => void;
@@ -65,12 +155,14 @@ function SitemapRow({
   const [title, setTitle] = useState(node.title);
   const [slug, setSlug] = useState(node.slug);
   const [slugDirty, setSlugDirty] = useState(false);
+  const { setNodeRef, setActivatorNodeRef, listeners, attributes, transform, transition, isDragging } =
+    useSortable({ id: flat.id });
 
   const onTitle = (v: string) => {
     setTitle(v);
     if (!slugDirty) {
       const s = slugify(v);
-      if (s) setSlug(s); // 변환 가능할 때만 자동(한글이면 기존 유지)
+      if (s) setSlug(s);
     }
   };
   const save = () => {
@@ -79,7 +171,19 @@ function SitemapRow({
   };
 
   return (
-    <li className="sitemap-row-li" style={{ paddingLeft: flat.depth * 14 }}>
+    <li
+      ref={setNodeRef}
+      className="sitemap-row-li"
+      style={{
+        paddingLeft: flat.depth * indent,
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.5 : 1,
+      }}
+    >
+      {showIndicator ? (
+        <div className="drop-indicator" style={{ marginLeft: indicatorDepth * indent }} />
+      ) : null}
       <div className={`node-row${active ? " is-active" : ""}`}>
         {editing ? (
           <span className="node-edit">
@@ -109,7 +213,16 @@ function SitemapRow({
           </span>
         ) : (
           <span className="node-view">
-            <span className="node-grip" aria-hidden="true">⠿</span>
+            <button
+              type="button"
+              ref={setActivatorNodeRef}
+              className="node-grip"
+              aria-label={`${node.title} 이동`}
+              {...attributes}
+              {...listeners}
+            >
+              ⠿
+            </button>
             <button
               type="button"
               className="node-title"
