@@ -177,4 +177,28 @@ describe("페이지 사이드바(LNB)", () => {
     fireEvent.click(screen.getByRole("checkbox", { name: "사이드바 표시" }));
     expect(store.getState().site!.pages.find((p) => p.id === introPageId)!.showSidebar).toBe(false);
   });
+
+  it("표시할 LNB가 없는 페이지(홈)에서는 '사이드바 표시' 토글을 숨긴다", () => {
+    addSectionWithChild(); // 활성=홈(폴백), 홈은 buildLnb=null
+    renderCanvas();
+    expect(screen.queryByRole("checkbox", { name: "사이드바 표시" })).toBeNull();
+  });
+
+  it("하위 페이지가 없는 단독 최상위 메뉴에서도 토글을 숨긴다", () => {
+    const lone = store.getState().addSitemapNode({ title: "단독", slug: "lone" });
+    const lonePage = store.getState().site!.pages.find((p) => p.sitemapNodeId === lone)!;
+    store.getState().setActivePage(lonePage.id);
+    const { container } = renderCanvas();
+    expect(screen.queryByRole("checkbox", { name: "사이드바 표시" })).toBeNull();
+    // 페이지 본문은 정상 렌더(제목 표시)
+    expect(container.querySelector(".canvas-page-title")?.textContent).toBe("단독");
+  });
+
+  it("LNB가 있는(끈 상태여도) 페이지에서는 토글이 보여 다시 켤 수 있다", () => {
+    const { introPageId } = addSectionWithChild();
+    store.getState().setActivePage(introPageId);
+    store.getState().setPageSidebar(introPageId, false); // 꺼도 토글은 남아야 함
+    renderCanvas();
+    expect(screen.getByRole("checkbox", { name: "사이드바 표시" })).toBeInTheDocument();
+  });
 });

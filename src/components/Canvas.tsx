@@ -73,14 +73,17 @@ export function Canvas() {
         >
           <div className="canvas-page-head">
             <h2 className="canvas-page-title">{page.title}</h2>
-            <label className="sidebar-toggle">
-              <input
-                type="checkbox"
-                checked={showSidebar}
-                onChange={(e) => api.getState().setPageSidebar(page.id, e.target.checked)}
-              />
-              사이드바 표시
-            </label>
+            {/* 토글은 실제로 표시할 LNB가 있을 때만 노출(홈·하위없는 단독메뉴에선 숨김) */}
+            {lnb ? (
+              <label className="sidebar-toggle">
+                <input
+                  type="checkbox"
+                  checked={showSidebar}
+                  onChange={(e) => api.getState().setPageSidebar(page.id, e.target.checked)}
+                />
+                사이드바 표시
+              </label>
+            ) : null}
           </div>
           {components.length === 0 ? (
             <p className="empty-guide">
