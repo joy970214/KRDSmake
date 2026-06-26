@@ -40,6 +40,11 @@ export const tableDefinition: ComponentDefinition = {
       <div className="krds-table-wrap">
         <table className="tbl col data">
           <caption>{String(props.caption ?? "")}</caption>
+          <colgroup>
+            {columns.map((_, i) => (
+              <col key={i} />
+            ))}
+          </colgroup>
           <thead>
             <tr>
               {columns.map((c, i) => (
@@ -88,10 +93,12 @@ export const tableDefinition: ComponentDefinition = {
           return `\t\t<tr>${cells}</tr>`;
         })
         .join("\n");
+      const colgroup = `<colgroup>${columns.map(() => "<col>").join("")}</colgroup>`;
       return [
         `<div class="krds-table-wrap">`,
         `\t<table class="tbl col data">`,
         `\t\t<caption>${escapeHtml(props.caption)}</caption>`,
+        `\t\t${colgroup}`,
         `\t\t<thead><tr>${headCells}</tr></thead>`,
         `\t\t<tbody>`,
         bodyRows,

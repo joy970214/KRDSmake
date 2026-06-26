@@ -1,11 +1,12 @@
 import { escapeHtml, pending2x, thumb } from "../helpers";
 import type { ComponentDefinition, Props } from "../types";
 
-// KRDS 마크업 기준: <button type="button" class="krds-btn">버튼</button>
-// 위계(variant): primary(기본) / secondary / tertiary → krds-btn 뒤 클래스 부가.
+// KRDS 마크업 기준: <button type="button" class="krds-btn primary">버튼</button>
+// 위계(variant): primary/secondary/tertiary 모두 krds-btn 뒤에 클래스 부가
+// (button_hierarchy.html: primary도 명시적 `krds-btn primary`). variant 없으면 기본 `krds-btn`.
 
 function classFor(variant: unknown): string {
-  return variant && variant !== "primary" ? `krds-btn ${variant}` : "krds-btn";
+  return variant ? `krds-btn ${variant}` : "krds-btn";
 }
 
 export const buttonDefinition: ComponentDefinition = {

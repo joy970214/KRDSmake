@@ -17,6 +17,11 @@ describe("버튼 컴포넌트 정의", () => {
       expect(html).toContain("신청하기");
     });
 
+    it("variant=primary는 krds-btn primary로 렌더한다(KRDS 위계)", () => {
+      const html = def.exportTemplates.html({ label: "확인", variant: "primary" }, makeExportCtx());
+      expect(html).toContain('class="krds-btn primary"');
+    });
+
     it("라벨의 HTML 특수문자를 이스케이프한다", () => {
       const html = def.exportTemplates.html({ label: "<b>x</b>" }, makeExportCtx());
       expect(html).toContain("&lt;b&gt;x&lt;/b&gt;");

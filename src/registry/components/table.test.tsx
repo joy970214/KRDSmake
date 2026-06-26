@@ -18,6 +18,15 @@ describe("표", () => {
     expect(html).toContain("<caption>현황표</caption>");
   });
 
+  it("colgroup으로 열 수만큼 col을 만든다(KRDS)", () => {
+    const html = def.exportTemplates.html(
+      { caption: "c", columns: ["a", "b", "c"], rows: [["1", "2", "3"]] },
+      makeExportCtx(),
+    );
+    expect(html).toContain("<colgroup>");
+    expect((html.match(/<col>/g) || []).length).toBe(3);
+  });
+
   it("열 머리글은 scope=col, 데이터는 행으로 렌더된다", () => {
     const html = def.exportTemplates.html(
       { caption: "c", columns: ["항목", "값"], rows: [["인구", "100"]] },
