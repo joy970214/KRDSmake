@@ -93,3 +93,43 @@ describe("캔버스 인스턴스 조작", () => {
     expect(screen.getByRole("button", { name: "버튼 선택" })).toBeInTheDocument();
   });
 });
+
+describe("다단 레이아웃 캔버스 렌더링", () => {
+  it("레이아웃 인스턴스는 칼럼 수만큼 드롭 칼럼을 렌더한다", () => {
+    store.getState().addComponent(pageId, "layout"); // 기본 2단
+    const { container } = renderCanvas();
+    expect(container.querySelectorAll(".krds-grid-col")).toHaveLength(2);
+  });
+
+  it("레이아웃을 선택하고 4단 버튼을 누르면 칼럼이 4개가 된다", () => {
+    store.getState().addComponent(pageId, "layout");
+    const { container } = renderCanvas();
+    fireEvent.click(screen.getByRole("button", { name: "다단 레이아웃 선택" }));
+    fireEvent.click(screen.getByRole("button", { name: "4단" }));
+    const layout = store.getState().site!.pages.find((p) => p.id === pageId)!.components[0];
+    expect(layout.columns).toHaveLength(4);
+    expect(container.querySelectorAll(".krds-grid-col")).toHaveLength(4);
+  });
+
+  it("칼럼 안 자식이 렌더되고 선택하면 자식 id로 selection이 설정된다", () => {
+    const layoutId = store.getState().addComponent(pageId, "layout");
+    const childId = store.getState().addComponentToColumn(pageId, layoutId, 0, "button");
+    renderCanvas();
+    fireEvent.click(screen.getByRole("button", { name: "버튼 선택" }));
+    expect(store.getState().selection).toEqual({
+      kind: "component",
+      pageId,
+      instanceId: childId,
+    });
+  });
+
+  it("선택한 칼럼 자식을 삭제하면 칼럼에서 제거된다", () => {
+    const layoutId = store.getState().addComponent(pageId, "layout");
+    store.getState().addComponentToColumn(pageId, layoutId, 0, "button");
+    renderCanvas();
+    fireEvent.click(screen.getByRole("button", { name: "버튼 선택" }));
+    fireEvent.click(screen.getByRole("button", { name: "버튼 삭제" }));
+    const layout = store.getState().site!.pages.find((p) => p.id === pageId)!.components[0];
+    expect(layout.columns![0]).toHaveLength(0);
+  });
+});

@@ -350,3 +350,39 @@
   color: var(--krds-color-light-point-50, #f04438);
   border-color: var(--krds-color-light-point-50, #f04438);
 }
+
+/* 다단 레이아웃 그리드 (KRDS style_05: 최대폭 1200px, 거터 24px, PC만 N단) */
+.krds-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--cols, 2), 1fr);
+  gap: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+.krds-grid-col {
+  min-height: 64px;
+  border: 1px dashed var(--krds-color-light-gray-30, #b1b8be);
+  border-radius: 6px;
+  padding: 8px;
+}
+.krds-grid-col.is-drop-over {
+  outline: 2px dashed var(--krds-color-light-primary-50, #256ef4);
+  outline-offset: -4px;
+  background: var(--krds-color-light-primary-5, #eaf2fe);
+}
+.col-empty-guide {
+  margin: 0;
+  color: var(--krds-color-light-gray-50, #6d7882);
+  font-size: 13px;
+  text-align: center;
+  padding: 16px 4px;
+}
+.col-child + .col-child {
+  margin-top: 8px;
+}
+/* 모바일은 1단 자동 스택 (디바이스 전환 Step6과 연계) */
+@media (max-width: 767px) {
+  .krds-grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -10,7 +10,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { getComponent } from "../registry";
 import type { PreviewCtx } from "../registry/types";
 import { useEditorState, useEditorStoreApi } from "../store/context";
-import { CANVAS_DROPPABLE_ID } from "../lib/dnd-plan";
+import { CANVAS_DROPPABLE_ID, columnDroppableId } from "../lib/dnd-plan";
 import type { ComponentInstance } from "../lib/types";
 
 export { CANVAS_DROPPABLE_ID } from "../lib/dnd-plan";
@@ -38,6 +38,8 @@ export function Canvas() {
   const footer = getComponent("footer");
 
   const components = page.components.slice().sort((a, b) => a.order - b.order);
+  const selectedId =
+    selection?.kind === "component" ? selection.instanceId : null;
 
   return (
     <div className="canvas">
@@ -70,9 +72,7 @@ export function Canvas() {
                   last={i === components.length - 1}
                   pageId={page.id}
                   ctx={ctx}
-                  selected={
-                    selection?.kind === "component" && selection.instanceId === inst.id
-                  }
+                  selectedId={selectedId}
                 />
               ))}
             </SortableContext>
@@ -91,18 +91,19 @@ function CanvasInstance({
   last,
   pageId,
   ctx,
-  selected,
+  selectedId,
 }: {
   inst: ComponentInstance;
   index: number;
   last: boolean;
   pageId: string;
   ctx: PreviewCtx;
-  selected: boolean;
+  selectedId: string | null;
 }) {
   const api = useEditorStoreApi();
   const def = getComponent(inst.componentDefinitionId);
   const name = def?.name ?? inst.componentDefinitionId;
+  const selected = selectedId === inst.id;
   const { setNodeRef, setActivatorNodeRef, listeners, attributes, transform, transition, isDragging } =
     useSortable({ id: inst.id });
 
@@ -138,11 +139,34 @@ function CanvasInstance({
       />
       {inst.hidden ? <span className="ci-hidden-badge">숨김</span> : null}
       <div className="ci-preview" aria-hidden={inst.hidden}>
-        {def ? def.Preview({ props: inst.props, ctx }) : null}
+        {inst.columns ? (
+          <LayoutGrid
+            inst={inst}
+            pageId={pageId}
+            ctx={ctx}
+            selectedId={selectedId}
+          />
+        ) : def ? (
+          def.Preview({ props: inst.props, ctx })
+        ) : null}
       </div>
 
       {selected ? (
         <div className="ci-toolbar" role="toolbar" aria-label={`${name} 조작`}>
+          {inst.columns
+            ? [2, 3, 4].map((n) => (
+                <button
+                  key={n}
+                  type="button"
+                  aria-label={`${n}단`}
+                  aria-pressed={inst.columns!.length === n}
+                  disabled={inst.columns!.length === n}
+                  onClick={() => api.getState().setLayoutColumns(pageId, inst.id, n)}
+                >
+                  {n}단
+                </button>
+              ))
+            : null}
           <button
             type="button"
             aria-label={`${name} 위로`}
@@ -178,6 +202,126 @@ function CanvasInstance({
             className="ci-del"
             aria-label={`${name} 삭제`}
             onClick={() => api.getState().removeComponent(pageId, inst.id)}
+          >
+            삭제
+          </button>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+// 다단 레이아웃 본문 — 칼럼 수만큼 드롭존을 가로로 배치(display:grid).
+function LayoutGrid({
+  inst,
+  pageId,
+  ctx,
+  selectedId,
+}: {
+  inst: ComponentInstance;
+  pageId: string;
+  ctx: PreviewCtx;
+  selectedId: string | null;
+}) {
+  const cols = inst.columns!.length;
+  return (
+    <div
+      className="krds-grid"
+      style={{ "--cols": cols } as React.CSSProperties}
+    >
+      {inst.columns!.map((children, i) => (
+        <ColumnDropZone
+          key={i}
+          layoutId={inst.id}
+          columnIndex={i}
+          items={children}
+          pageId={pageId}
+          ctx={ctx}
+          selectedId={selectedId}
+        />
+      ))}
+    </div>
+  );
+}
+
+function ColumnDropZone({
+  layoutId,
+  columnIndex,
+  items,
+  pageId,
+  ctx,
+  selectedId,
+}: {
+  layoutId: string;
+  columnIndex: number;
+  items: ComponentInstance[];
+  pageId: string;
+  ctx: PreviewCtx;
+  selectedId: string | null;
+}) {
+  const { setNodeRef, isOver } = useDroppable({
+    id: columnDroppableId(layoutId, columnIndex),
+  });
+  return (
+    <div
+      ref={setNodeRef}
+      className={`krds-grid-col${isOver ? " is-drop-over" : ""}`}
+      data-column-index={columnIndex}
+      aria-label={`${columnIndex + 1}번 칼럼`}
+    >
+      {items.length === 0 ? (
+        <p className="col-empty-guide">여기에 컴포넌트를 드롭</p>
+      ) : (
+        items.map((child) => (
+          <ColumnChild
+            key={child.id}
+            child={child}
+            pageId={pageId}
+            ctx={ctx}
+            selected={selectedId === child.id}
+          />
+        ))
+      )}
+    </div>
+  );
+}
+
+// 칼럼 안 자식 — MVP는 선택 + 삭제(재정렬/복제는 후속).
+function ColumnChild({
+  child,
+  pageId,
+  ctx,
+  selected,
+}: {
+  child: ComponentInstance;
+  pageId: string;
+  ctx: PreviewCtx;
+  selected: boolean;
+}) {
+  const api = useEditorStoreApi();
+  const def = getComponent(child.componentDefinitionId);
+  const name = def?.name ?? child.componentDefinitionId;
+  return (
+    <div
+      className={`canvas-instance col-child${selected ? " is-selected" : ""}`}
+      data-instance-id={child.id}
+    >
+      <button
+        type="button"
+        className="ci-select"
+        aria-label={`${name} 선택`}
+        onClick={() => api.getState().selectComponent(pageId, child.id)}
+      />
+      <div className="ci-preview">
+        {def ? def.Preview({ props: child.props, ctx }) : null}
+      </div>
+      {selected ? (
+        <div className="ci-toolbar" role="toolbar" aria-label={`${name} 조작`}>
+          <button
+            type="button"
+            className="ci-del"
+            aria-label={`${name} 삭제`}
+            onClick={() => api.getState().removeComponent(pageId, child.id)}
           >
             삭제
           </button>

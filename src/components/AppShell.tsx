@@ -43,6 +43,16 @@ export function AppShell() {
     if (plan.kind === "add") {
       const instId = api.getState().addComponent(pageId, plan.componentDefinitionId, plan.index);
       api.getState().selectComponent(pageId, instId);
+    } else if (plan.kind === "add-to-column") {
+      const instId = api
+        .getState()
+        .addComponentToColumn(
+          pageId,
+          plan.layoutInstanceId,
+          plan.columnIndex,
+          plan.componentDefinitionId,
+        );
+      api.getState().selectComponent(pageId, instId);
     } else {
       api.getState().reorderComponent(pageId, plan.instanceId, plan.index);
     }
