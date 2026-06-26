@@ -23,7 +23,7 @@
 | 3 | 3패널 에디터 + 사이트맵 트리 CRUD/순서변경 | ✅ |
 | 4 | 캔버스 DnD 배치 + 컴포넌트 조작(순서/복제/삭제/숨김) | ✅ |
 | 4+ | 인스턴스 드래그 핸들(`⠿`)로 순서변경 + 드롭 위치 삽입 (커밋 `028a950` "②") | ✅ |
-| **4-2** | **가로 다단 레이아웃 (사용자 보고 #3) — §4-2 참조** | **⬜ ← 다음(우선)** |
+| **4-2** | **가로 다단 레이아웃 (사용자 보고 #3) — §4-2 참조** | **🔶 진행중(TDD 1단계, types.ts 미커밋)** |
 | 5 | 우측 설정 패널 자동 폼(RHF+Zod) + 실시간 반영 (RHF/Zod 미설치 확인됨) | ⬜ |
 | 6 | 테마(라이트/선명/시스템) + 디바이스 전환 | ⬜ |
 | 7 | HTML 익스포트 + ZIP 다운로드 | ⬜ |
@@ -133,20 +133,43 @@ src/
 - **핵심 원칙: "동일 화면에서 칼럼 수를 혼용하지 말 것"**(시각적 일관성) → 행 단위 N등분 설계 근거
 - ⚠️ **중요 확인**: 벤더링된 KRDS HTML Component Kit(`vendor/krds`)에는 **재사용 그리드 클래스(`.col-6` 류)가 없음**. `.grid`/`.row`/`.column`은 폼 등 특정 컴포넌트 전용. → 다단 그리드는 KRDS 수치를 따르되 **우리가 직접 구현**(`display:grid`)해야 함. 임의 `.col-*` 클래스 만들지 말 것.
 
-### 확정 방향 (사용자 확인 대기 중이었음 — 마지막 메시지에서 "이 방향으로?" 질문에 미응답)
-**"레이아웃(다단)" 블록을 새 배치 컴포넌트로 추가:**
-- 팔레트에서 드래그 → **2단 / 3단 / 4단** 선택 → 각 칼럼이 개별 드롭 영역
-- 그리드: `display:grid` + 콘텐츠폭 1200px + 거터 24px, **PC만 N단 / 모바일 자동 1단 스택**
-- 한 행 = 고정 칼럼수 → "혼용 금지" 원칙 자동 충족. 익스포트도 동일 그리드 마크업.
+### ✅ 확정 방향 (2026-06-26 사용자 승인: "레이아웃 블록 N등분 방향으로 진행")
+**"다단 레이아웃" 블록을 새 배치 컴포넌트(컨테이너)로 추가:**
+- 팔레트에서 드래그 → 기본 2단 생성. 선택 시 **2/3/4단** 변경(인스턴스 툴바 컨트롤).
+- 각 칼럼이 개별 드롭 영역 → 그 안에 일반 컴포넌트를 드롭(가로 나란히 배치).
+- 그리드: `display:grid` + 콘텐츠폭 1200px + 거터 24px, **PC만 N단 / 모바일 자동 1단 스택**.
+- 한 행 = 고정 칼럼수 → KRDS "혼용 금지" 원칙 자동 충족.
 
-### TDD 작업 순서(이 프로젝트 방침 = red→green 필수)
-1. 데이터 모델(`lib/types.ts`): 인스턴스가 자식 보유 가능(레이아웃=칼럼별 children 배열) — 실패 테스트부터
-2. store(`store/editor-store.ts`): 칼럼 안에 드롭/이동/제거 액션 (기존 add/reorder를 중첩 대응)
-3. 레지스트리(`registry/components/layout.tsx`): `layout` 정의(Preview + HTML 익스포트 템플릿) + 배치가능 목록 추가
-4. `Canvas.tsx`: 칼럼별 중첩 드롭 영역(`useDroppable` per column) + dnd-kit 연결
-5. 헤드리스 실브라우저(playwright 캐시 브라우저)로 2단 배치 검증
+### ✅ 확정 설계 (구현 상세 — 단순화 우선)
+- **모델**: `ComponentInstance.columns?: ComponentInstance[][]` (레이아웃 인스턴스만 보유, `columns.length`=단 수). → `lib/types.ts`에 추가함(아래 "현재 진행 위치").
+- **레지스트리**: 새 `registry/components/layout.tsx` — `id:"layout"`, `name:"다단 레이아웃"`, `category:"레이아웃 및 표현"`, `isKrdsStandard:false`(KRDS에 범용 그리드 컴포넌트 없음 — 정직하게 false), `defaultProps:{columns:2}`. **`container` 마커**를 def에 둬서(예: `container?: { columnCountProp: "columns" }`) store가 "이건 컨테이너, 초기 단 수는 defaultProps.columns"임을 알게 함. `ComponentDefinition` 타입(`registry/types.ts`)에 `container?` 추가 필요. `listPlaceableComponents()`에 자동 포함(전역 아님).
+- **store 액션**(순수 — 먼저 TDD):
+  1. `addComponent`가 `def.container` 있으면 `instance.columns = Array(N).fill(()=>[])`로 초기화.
+  2. `addComponentToColumn(pageId, layoutInstanceId, columnIndex, defId, index?)` → 자식 id 반환.
+  3. `setLayoutColumns(pageId, layoutInstanceId, count)` → columns 배열 리사이즈(축소 시 넘치는 자식은 마지막 칼럼으로 이동, 보존).
+  4. `removeComponent`를 **재귀화**(칼럼 안 자식도 검색·제거) — 잘못 드롭한 자식 삭제용.
+- **Canvas**(`Canvas.tsx`): 인스턴스에 `.columns` 있으면 **특수 렌더** — `<div class="krds-grid">` + 칼럼별 `useDroppable`(id `col:<layoutId>:<index>`) + 각 칼럼 자식들을 그 def.Preview로 렌더. 선택 툴바에 2/3/4단 버튼 추가.
+- **dnd-plan/AppShell**: 드롭 타깃 ID 체계 확장. 칼럼 droppable id = `col:<layoutId>:<colIndex>`. `planDrop`이 이 id를 해석해 `addComponentToColumn`/칼럼 내 이동으로 라우팅. (기존 평면 `canvas-page` 경로는 유지.)
+- **CSS**: `.krds-grid{display:grid;gap:24px;grid-template-columns:repeat(var(--cols),1fr);max-width:1200px}` 류를 추가(`app/editor.css` 또는 별도). 모바일 1단 접힘은 미디어쿼리(디바이스 전환 Step6과 연계).
+- **익스포트(Step7로 연기)**: `exportTemplates.html`은 일단 그리드 래퍼만. 자식 주입은 익스포트 파이프라인이 columns를 재귀 처리할 때(Step7) 배선. 지금 과하게 만들지 말 것.
 
-주의: 기존 DnD는 평면(page.components 단일 배열) 전제 → 중첩 도입 시 `dnd-plan.ts`의 드롭 타깃 ID 체계(`canvas-page`, `palette:<id>`) 확장 필요(칼럼 droppable id 예: `col:<instanceId>:<colIndex>`).
+### TDD 작업 순서 + 현재 진행 위치
+1. **모델 타입 확장** (`lib/types.ts` `columns?`, `registry/types.ts` `container?`) — *컴파일 토대, 동작 아님.*
+   → **🔶 진행중: `lib/types.ts`에 `columns?` 추가까지 함(미커밋). `registry/types.ts`의 `container?`는 아직.**
+2. ⬜ 레지스트리 `layout` def: `layout.test.tsx` 먼저(id/category/container 마커/defaultProps.columns=2/html 그리드 래퍼) → RED 확인 → 구현 → `index.ts` 등록.
+3. ⬜ store `addComponent` 컨테이너 초기화: 실패 테스트(layout 추가 시 `columns===[[],[]]`) → green.
+4. ⬜ store `addComponentToColumn` → 실패 테스트 → green.
+5. ⬜ store `setLayoutColumns`(리사이즈+자식 보존) → 실패 테스트 → green.
+6. ⬜ store `removeComponent` 재귀화 → 칼럼 내 자식 제거 테스트 → green.
+7. ⬜ `dnd-plan` 칼럼 라우팅 → planDrop 테스트 → green.
+8. ⬜ Canvas/AppShell 배선(UI) → 헤드리스 실브라우저로 2단 배치 검증.
+
+> **재개 첫 행동**: `git diff src/lib/types.ts`로 미커밋 변경 확인 → 위 2번(layout.test.tsx RED)부터 계속. TDD 스킬(red→green) 준수. 미응답 결정 없음(방향·설계 모두 확정).
+
+#### MVP에서 의도적으로 뺀 것(후속/백로그)
+- 칼럼 **내부** 자식 순서변경 / 칼럼 간 이동(드래그) — MVP는 "드롭해 배치 + 제거"까지. 재정렬은 후속.
+- 레이아웃 **중첩**(레이아웃 안에 레이아웃) — 막거나 미지원으로.
+- 익스포트 자식 주입(Step7).
 
 ## 4-1. Step 4에서 한 것 (참고)
 
