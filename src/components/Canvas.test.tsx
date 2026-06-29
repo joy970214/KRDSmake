@@ -35,6 +35,15 @@ describe("캔버스 인스턴스 조작", () => {
     });
   });
 
+  it("빈 캔버스 배경을 클릭하면 선택이 해제된다", () => {
+    store.getState().addComponent(pageId, "button");
+    const { container } = renderCanvas();
+    fireEvent.click(screen.getByRole("button", { name: "버튼 선택" }));
+    expect(store.getState().selection).not.toBeNull();
+    fireEvent.click(container.querySelector(".canvas-page")!);
+    expect(store.getState().selection).toBeNull();
+  });
+
   it("선택했을 때만 조작 툴바가 보인다", () => {
     store.getState().addComponent(pageId, "button");
     renderCanvas();

@@ -22,6 +22,7 @@ export function Canvas() {
   const site = useEditorState((s) => s.site);
   const activePageId = useEditorState((s) => s.activePageId);
   const selection = useEditorState((s) => s.selection);
+  const api = useEditorStoreApi();
   const { setNodeRef, isOver } = useDroppable({ id: CANVAS_DROPPABLE_ID });
   if (!site) return null;
 
@@ -69,6 +70,10 @@ export function Canvas() {
           ref={setNodeRef}
           className={`canvas-page${isOver ? " is-drop-over" : ""}`}
           aria-label="페이지 본문(컴포넌트 드롭 영역)"
+          // 빈 배경 직접 클릭 시 선택 해제 → 우측 페이지 설정 폼으로 복귀(자식 클릭은 제외)
+          onClick={(e) => {
+            if (e.target === e.currentTarget) api.getState().clearSelection();
+          }}
         >
           <h2 className="canvas-page-title">{page.title}</h2>
           {components.length === 0 ? (
