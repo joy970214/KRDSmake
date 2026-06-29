@@ -1,16 +1,15 @@
 # 작업 인수인계 (이어서 진행용)
 
-- 최종 업데이트: 2026-06-26 (4-2~4-5 + 컴포넌트 충실도 audit 완료 / Step 5 설계·계획 작성 완료, 실행 대기)
+- 최종 업데이트: 2026-06-29 (**Step 5 우측 설정 자동 폼 구현 완료** — SDD 6 task + 검증 보강)
 - 저장소: `git@github.com:joy970214/KRDSmake.git` (브랜치 `master`)
-  ⚠️ origin보다 **앞섬** — Step 5 설계(`8a6a9af`)·계획(`09c58d1`) 미푸시(나머지는 push됨).
+  ⚠️ origin보다 **앞섬** — Step 5 설계(`8a6a9af`)·계획(`09c58d1`) + Step5 구현 커밋들 미푸시.
 - 프로젝트: KRDS 기반 공공 웹사이트 빌더 (노코드, 정적 export)
 
-> **재개 시 다음 작업 = Step 5 구현 — 설계·계획 이미 작성됨, 바로 실행만 하면 됨.**
-> - 설계: `docs/superpowers/specs/2026-06-26-step5-settings-form-design.md`
-> - 계획: `docs/superpowers/plans/2026-06-26-step5-settings-form.md` (TDD 6 task)
-> - 실행: superpowers:subagent-driven-development로 task 1부터. (브레인스토밍/계획 단계는 건너뜀)
+> **재개 시 다음 작업 = Step 6 (테마 라이트/선명/시스템 + 디바이스 전환).** 설계·계획 아직 없음 →
+> 브레인스토밍 → writing-plans → subagent-driven-development 순서.
 >
-> 이번 세션 완료: 4-2~4-5 + **컴포넌트 KRDS 충실도 audit**(§4-6). Step 5 착수 전 선결은 §4 하단 체크리스트(대부분 계획에 이미 반영).
+> 이번 세션 완료: **Step 5 우측 설정 자동 폼**(§Step5). 스키마 기반 자동 폼(RHF/Zod 미사용),
+> 2모드(컴포넌트/페이지), KRDS 폼 마크업 위젯 12종, 실시간 반영, 캔버스 사이드바 토글→페이지 설정 폼 이전.
 
 ---
 
@@ -32,14 +31,30 @@
 | **4-4** | **사이트맵 트리 UI/UX 개편** — DnD 재배치 + 활성강조 + 호버액션 + 추가즉시편집/slug자동 | ✅ |
 | **4-5** | **카테고리 메뉴(섹션 랜딩)** — isCategory 토글 + 카테고리 제목클릭→첫 하위 콘텐츠로 라우팅 | ✅ |
 | **4-6** | **컴포넌트 KRDS 충실도 audit** — 원칙 명문화 + error 4건(button/table/header/footer) 교정 | ✅ |
-| 5 | 우측 설정 패널 자동 폼 + 실시간 반영 (**RHF/Zod 안 씀** 확정) | 🔶 설계·계획 완료, 실행 대기 |
+| **5** | **우측 설정 패널 자동 폼 + 실시간 반영** (RHF/Zod 안 씀, 스키마 기반 직접 구현) | ✅ |
 | 6 | 테마(라이트/선명/시스템) + 디바이스 전환 | ⬜ |
 | 7 | HTML 익스포트 + ZIP 다운로드 | ⬜ |
 
-- 테스트: **177개 통과**(25 파일) · lint 0 · tsc 0 · static export 빌드 성공
+- 테스트: **190개 통과**(28 파일) · lint 0 · tsc 0 · static export 빌드 성공
 - 화면 확인됨: 3패널 에디터 + 팔레트→캔버스 배치/선택/복제/순서변경, **가로 다단(2~4단) 배치**,
   **좌측 LNB [사이드바|본문] 2칼럼**, **사이트맵 트리 DnD 재배치/활성강조/호버액션**, **카테고리 토글/배지**
   (scratchpad `f65ad225`: layout-result.png, lnb-desktop.png, tree-dnd.png, category.png)
+
+### Step 5. 우측 설정 자동 폼 (완료)
+- 설계 `docs/superpowers/specs/2026-06-26-step5-settings-form-design.md`, 계획 `…/plans/2026-06-26-step5-settings-form.md`(SDD 6 task).
+- 커밋: `582f599`(store)·`4c30105`(Field 단일값)·`6644bbf`(Field repeater/table)·`8e25455`(ComponentForm)·`5275004`(RightPanel+PageSettings+배선)·`6b69d4e`(빈 캔버스 클릭 선택해제 보강).
+- **store**(`editor-store.ts`): `updateComponentProps` **재귀화**(칼럼 자식 patch) + `findInstance`(export, 재귀 탐색) + `updatePageMeta(pageId, patch)`. `setPageSidebar` **제거**(updatePageMeta로 대체).
+- **위젯**(`src/components/right/Field.tsx`): `EditablePropType` 12종 → KRDS 폼 마크업(`.form-group>.form-tit>label + .form-conts>입력 + .form-hint`). text/url/number/date=`krds-input`, textarea=`.textarea-wrap`, select=`krds-form-select`, radio/checkbox=`.krds-check-area`, color=네이티브, **image=URL 입력+미리보기**(파일 업로드 후속), repeater(string[])·table(string[][])=빌더 내부 편집기.
+- **자동 폼**(`ComponentForm.tsx`): 선택 인스턴스의 def `editableProps`로 Field 조합, `onChange`→`updateComponentProps` **실시간 반영**. 칼럼 자식도 편집(findInstance 재귀).
+- **2모드**(`RightPanel.tsx`): `selection.kind==="component"`→ComponentForm / 없으면 활성 페이지 `PageSettingsForm`(사이드바·브레드크럼·인페이지내비 토글 + SEO 제목/설명). `AppShell` 우측 패널이 RightPanel 렌더.
+- **캔버스 토글 이전**: 캔버스 상단 "사이드바 표시" 임시 토글 제거 → 페이지 설정 폼으로. **빈 캔버스 배경 클릭 시 `clearSelection`**(자식 클릭은 `e.target===e.currentTarget` 가드 제외)으로 페이지 설정 폼 복귀 동선 추가.
+- 검증: 실브라우저(드롭→버튼 글자 "신청하기" 실시간 반영, 선택해제→페이지 설정 전환) 통과. scratchpad `00f44446`: step5-component.png / step5-page.png.
+- ⚠️ **후속/백로그**:
+  1. **전역요소 편집**(헤더/푸터/마스트헤드)=Step 5 범위 밖: `Selection {kind:'global', target}` + 전역 3종 `editableProps` + 선택 진입점.
+  2. **파일 업로드**(image 자산): IndexedDB Blob·자산 목록·alt(좌측 자산 탭). 현재 image는 URL만.
+  3. **폼 입력 컴포넌트 확충**(결과 사이트용 select/radio/checkbox/textarea/date) — audit §4-6 백로그.
+  4. **PageSettingsForm 체크박스 시각 마감**: 간이 `.krds-form-check.inline` 구조라 KRDS 커스텀 체크박스 스타일 미적용(네이티브 체크박스). 기능 정상, 시각 폴리시 후속.
+  5. `set` 헬퍼 복합 타입표기(`Parameters<ReturnType<...>>`)·repeater/table index key는 무해, 정리 선택.
 
 ### 4-6. 컴포넌트 KRDS 충실도 audit (완료)
 - 원칙: `docs/COMPONENT-FIDELITY.md` — **모든 컴포넌트·폼 위젯·패턴 마크업은 `vendor/krds/html/code/*.html`(KRDS 공식 키트)에서 가져온다.** 대응 없으면 가장 가까운 패턴 + `isKrdsStandard:false`.
@@ -132,6 +147,11 @@ src/
       LeftPanel.tsx     # 사이트맵/컴포넌트 탭
       SitemapTree.tsx   # 사이트맵 트리 — DnD 재배치/활성강조/호버액션/인라인편집/카테고리 토글(4-4,4-5)
       ComponentPalette.tsx # draggable 카드(배치가능 6종만; 전역요소 제외)
+    right/              # Step 5 우측 설정 자동 폼
+      Field.tsx         # EditablePropType 12종 → KRDS 폼 마크업 위젯
+      ComponentForm.tsx # 선택 인스턴스 editableProps로 자동 폼 + 실시간 반영
+      PageSettingsForm.tsx # 선택 없을 때 현재 페이지 설정(LNB/브레드크럼/인페이지/SEO)
+      RightPanel.tsx    # selection 유무로 ComponentForm/PageSettingsForm 분기
 ```
 
 자산(커밋됨, gitignore된 public/ 복사본은 빌드 때 생성):
