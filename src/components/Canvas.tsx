@@ -12,6 +12,7 @@ import type { PreviewCtx } from "../registry/types";
 import { useEditorState, useEditorStoreApi } from "../store/context";
 import { CANVAS_DROPPABLE_ID, columnDroppableId } from "../lib/dnd-plan";
 import { buildLnb } from "../lib/lnb";
+import { buildBreadcrumb } from "../lib/breadcrumb";
 import type { ComponentInstance, SitemapNode } from "../lib/types";
 
 export { CANVAS_DROPPABLE_ID } from "../lib/dnd-plan";
@@ -41,6 +42,7 @@ export function Canvas() {
 
   const showSidebar = (page.showSidebar ?? true);
   const lnb = buildLnb(site.sitemap, page.sitemapNodeId);
+  const crumbs = page.showBreadcrumb ? buildBreadcrumb(site.sitemap, page.sitemapNodeId) : [];
 
   const components = page.components.slice().sort((a, b) => a.order - b.order);
   const selectedId =
@@ -75,6 +77,19 @@ export function Canvas() {
             if (e.target === e.currentTarget) api.getState().clearSelection();
           }}
         >
+          {crumbs.length >= 2 ? (
+            <nav className="krds-breadcrumb-wrap" aria-label="현재 경로">
+              <ol className="breadcrumb">
+                {crumbs.map((c, i) => (
+                  <li key={i} className={c.isHome ? "home" : undefined}>
+                    <a href={c.path} className="txt" onClick={(e) => e.preventDefault()}>
+                      {c.title}
+                    </a>
+                  </li>
+                ))}
+              </ol>
+            </nav>
+          ) : null}
           <h2 className="canvas-page-title">{page.title}</h2>
           {components.length === 0 ? (
             <p className="empty-guide">

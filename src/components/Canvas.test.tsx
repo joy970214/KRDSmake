@@ -180,3 +180,22 @@ describe("페이지 사이드바(LNB)", () => {
   });
 
 });
+
+describe("브레드크럼", () => {
+  it("showBreadcrumb ON이면 비홈 페이지에 브레드크럼을 렌더한다", () => {
+    const { introPageId } = addSectionWithChild();
+    store.getState().setActivePage(introPageId);
+    store.getState().updatePageMeta(introPageId, { showBreadcrumb: true });
+    const { container } = renderCanvas();
+    expect(container.querySelector("nav.krds-breadcrumb-wrap")).not.toBeNull();
+    expect(container.querySelector(".breadcrumb .home")).not.toBeNull();
+  });
+
+  it("showBreadcrumb OFF이면 브레드크럼이 없다", () => {
+    const { introPageId } = addSectionWithChild();
+    store.getState().setActivePage(introPageId);
+    store.getState().updatePageMeta(introPageId, { showBreadcrumb: false });
+    const { container } = renderCanvas();
+    expect(container.querySelector("nav.krds-breadcrumb-wrap")).toBeNull();
+  });
+});
