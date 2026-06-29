@@ -2,17 +2,29 @@ import { describe, expect, it } from "vitest";
 import type { SitemapNode } from "./types";
 import { buildBreadcrumb } from "./breadcrumb";
 
+function node(
+  partial: Partial<SitemapNode> & { id: string; title: string; path: string },
+): SitemapNode {
+  return {
+    slug: "",
+    order: 0,
+    visibleInHeader: true,
+    visibleInFooter: false,
+    pageId: `${partial.id}-page`,
+    children: [],
+    ...partial,
+  };
+}
+
 const sitemap: SitemapNode[] = [
-  { id: "home", title: "홈", slug: "", path: "/", isHome: true, children: [] } as SitemapNode,
-  {
+  node({ id: "home", title: "홈", slug: "", path: "/", isHome: true }),
+  node({
     id: "svc",
     title: "서비스",
     slug: "service",
     path: "/service",
-    children: [
-      { id: "intro", title: "소개", slug: "intro", path: "/service/intro", children: [] } as SitemapNode,
-    ],
-  } as SitemapNode,
+    children: [node({ id: "intro", title: "소개", slug: "intro", path: "/service/intro" })],
+  }),
 ];
 
 describe("buildBreadcrumb", () => {
