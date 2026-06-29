@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { createEditorStore, type EditorStore } from "./editor-store";
+import { createEditorStore, findInstance, type EditorStore } from "./editor-store";
 import { getComponent } from "../registry";
 
 let store: EditorStore;
@@ -434,6 +434,40 @@ describe("setPageSidebar", () => {
     const otherPage = store.getState().site!.pages.find((p) => p.sitemapNodeId === nodeId)!;
     store.getState().setPageSidebar(otherPage.id, false);
     expect(store.getState().site!.pages.find((p) => p.id === homeId)!.showSidebar).toBeUndefined();
+  });
+});
+
+describe("findInstance", () => {
+  it("최상위와 칼럼 안 자식을 모두 찾는다", () => {
+    const pageId = store.getState().site!.pages[0].id;
+    const top = store.getState().addComponent(pageId, "button");
+    const layoutId = store.getState().addComponent(pageId, "layout");
+    const child = store.getState().addComponentToColumn(pageId, layoutId, 0, "table");
+    const comps = store.getState().site!.pages.find((p) => p.id === pageId)!.components;
+    expect(findInstance(comps, top)!.componentDefinitionId).toBe("button");
+    expect(findInstance(comps, child)!.componentDefinitionId).toBe("table");
+    expect(findInstance(comps, "nope")).toBeUndefined();
+  });
+});
+
+describe("updateComponentProps — 칼럼 자식 재귀", () => {
+  it("칼럼 안 자식의 props도 갱신한다", () => {
+    const pageId = store.getState().site!.pages[0].id;
+    const layoutId = store.getState().addComponent(pageId, "layout");
+    const child = store.getState().addComponentToColumn(pageId, layoutId, 0, "button");
+    store.getState().updateComponentProps(pageId, child, { label: "확인" });
+    const comps = store.getState().site!.pages.find((p) => p.id === pageId)!.components;
+    expect(findInstance(comps, child)!.props.label).toBe("확인");
+  });
+});
+
+describe("updatePageMeta", () => {
+  it("페이지 설정 필드를 병합 갱신한다", () => {
+    const pageId = store.getState().site!.pages[0].id;
+    store.getState().updatePageMeta(pageId, { seoTitle: "소개", showBreadcrumb: true });
+    const page = store.getState().site!.pages.find((p) => p.id === pageId)!;
+    expect(page.seoTitle).toBe("소개");
+    expect(page.showBreadcrumb).toBe(true);
   });
 });
 

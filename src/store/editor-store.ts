@@ -147,6 +147,38 @@ function removeFromList(
   );
 }
 
+// id로 인스턴스 찾기(최상위 + 칼럼 재귀).
+export function findInstance(
+  components: ComponentInstance[],
+  id: string,
+): ComponentInstance | undefined {
+  for (const c of components) {
+    if (c.id === id) return c;
+    if (c.columns) {
+      for (const col of c.columns) {
+        const found = findInstance(col, id);
+        if (found) return found;
+      }
+    }
+  }
+  return undefined;
+}
+
+// id 인스턴스의 props를 patch 병합(최상위 + 칼럼 재귀, 불변).
+function patchProps(
+  components: ComponentInstance[],
+  id: string,
+  patch: Record<string, unknown>,
+): ComponentInstance[] {
+  return components.map((c) => {
+    if (c.id === id) return { ...c, props: { ...c.props, ...patch } };
+    if (c.columns) {
+      return { ...c, columns: c.columns.map((col) => patchProps(col, id, patch)) };
+    }
+    return c;
+  });
+}
+
 // pageId 페이지의 components를 fn으로 갱신(renumber까지)한 새 Site 반환
 function updatePageComponents(
   site: Site,
@@ -177,6 +209,12 @@ export type EditorState = {
   setHome: (id: string) => void;
   moveNode: (id: string, targetParentId: string | undefined, index: number) => void;
   setActivePage: (pageId: string) => void;
+  updatePageMeta: (
+    pageId: string,
+    patch: Partial<
+      Pick<Page, "showSidebar" | "showBreadcrumb" | "showInPageNavigation" | "seoTitle" | "seoDescription">
+    >,
+  ) => void;
   setNodeCategory: (id: string, isCategory: boolean) => void;
 
   addComponent: (pageId: string, componentDefinitionId: string, index?: number) => string;
@@ -323,6 +361,17 @@ export function createEditorStore(): EditorStore {
       set({ activePageId: pageId });
     },
 
+    updatePageMeta(pageId, patch) {
+      const site = get().site;
+      if (!site) return;
+      set({
+        site: {
+          ...site,
+          pages: site.pages.map((p) => (p.id === pageId ? { ...p, ...patch } : p)),
+        },
+      });
+    },
+
     setNodeCategory(id, isCategory) {
       const site = get().site;
       if (!site) return;
@@ -455,9 +504,7 @@ export function createEditorStore(): EditorStore {
       if (!site) return;
       set({
         site: updatePageComponents(site, pageId, (comps) =>
-          comps.map((c) =>
-            c.id === instanceId ? { ...c, props: { ...c.props, ...patch } } : c,
-          ),
+          patchProps(comps, instanceId, patch),
         ),
       });
     },
