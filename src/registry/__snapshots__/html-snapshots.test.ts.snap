@@ -54,7 +54,7 @@ exports[`컴포넌트 HTML 익스포트 스냅샷 > header — 기본 마크업 
 </header>"
 `;
 
-exports[`컴포넌트 HTML 익스포트 스냅샷 > image — 기본 마크업 1`] = `"<img src="" alt="">"`;
+exports[`컴포넌트 HTML 익스포트 스냅샷 > image — 기본 마크업 1`] = `"<div style="text-align:left"><img src="" alt="" style="width:auto;max-width:100%"></div>"`;
 
 exports[`컴포넌트 HTML 익스포트 스냅샷 > input-form — 기본 마크업 1`] = `
 "<div class="form-group">

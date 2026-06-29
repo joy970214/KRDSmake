@@ -33,3 +33,21 @@ describe("이미지", () => {
     expect(altProp?.required).toBe(true);
   });
 });
+
+describe("이미지 변형", () => {
+  it("가운데 정렬이면 래퍼에 text-align:center를 준다", () => {
+    const html = def.exportTemplates.html(
+      { src: "/a.png", alt: "그림", align: "center" },
+      makeExportCtx(),
+    );
+    expect(html).toContain("text-align:center");
+  });
+
+  it("꽉참이면 img에 width:100%를 준다", () => {
+    const html = def.exportTemplates.html(
+      { src: "/a.png", alt: "그림", fit: "full" },
+      makeExportCtx(),
+    );
+    expect(html).toContain("width:100%");
+  });
+});
