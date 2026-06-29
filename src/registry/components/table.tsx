@@ -26,20 +26,36 @@ export const tableDefinition: ComponentDefinition = {
       ["제목1-1", "내용이 들어갑니다."],
       ["제목1-2", "내용이 들어갑니다."],
     ],
+    headerType: "col",
+    showCaption: true,
   },
   editableProps: [
     { key: "caption", label: "표 제목(요약)", type: "text", required: true },
     { key: "columns", label: "열 머리글", type: "repeater" },
     { key: "rows", label: "표 내용", type: "table" },
+    {
+      key: "headerType",
+      label: "머리글 위치",
+      type: "select",
+      options: [
+        { label: "열 머리글(위)", value: "col" },
+        { label: "행 머리글(왼쪽)", value: "row" },
+      ],
+    },
+    { key: "showCaption", label: "표 제목 보이기", type: "checkbox" },
   ],
 
   Preview({ props }: { props: Props }) {
     const columns = asColumns(props);
     const rows = asRows(props);
+    const tblCls = `tbl ${props.headerType === "row" ? "row" : "col"} data`;
+    const showCaption = props.showCaption !== false;
     return (
       <div className="krds-table-wrap">
-        <table className="tbl col data">
-          <caption>{String(props.caption ?? "")}</caption>
+        <table className={tblCls}>
+          <caption className={showCaption ? undefined : "sr-only"}>
+            {String(props.caption ?? "")}
+          </caption>
           <colgroup>
             {columns.map((_, i) => (
               <col key={i} />
@@ -78,6 +94,9 @@ export const tableDefinition: ComponentDefinition = {
     html(props) {
       const columns = asColumns(props);
       const rows = asRows(props);
+      const tblCls = `tbl ${props.headerType === "row" ? "row" : "col"} data`;
+      const showCaption = props.showCaption !== false;
+      const captionCls = showCaption ? "" : ` class="sr-only"`;
       const headCells = columns
         .map((c) => `<th scope="col">${escapeHtml(c)}</th>`)
         .join("");
@@ -96,8 +115,8 @@ export const tableDefinition: ComponentDefinition = {
       const colgroup = `<colgroup>${columns.map(() => "<col>").join("")}</colgroup>`;
       return [
         `<div class="krds-table-wrap">`,
-        `\t<table class="tbl col data">`,
-        `\t\t<caption>${escapeHtml(props.caption)}</caption>`,
+        `\t<table class="${tblCls}">`,
+        `\t\t<caption${captionCls}>${escapeHtml(props.caption)}</caption>`,
         `\t\t${colgroup}`,
         `\t\t<thead><tr>${headCells}</tr></thead>`,
         `\t\t<tbody>`,
