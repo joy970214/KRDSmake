@@ -116,10 +116,48 @@ export function Field({
           {str ? <img className="field-img-preview" src={str} alt="" /> : null}
         </>,
       );
-    case "repeater":
-    case "table":
-      // Task 3에서 구현
-      return titled(<p className="field-pending">복합 위젯(Task 3)</p>);
+    case "repeater": {
+      const arr = Array.isArray(value) ? (value as string[]) : [];
+      const setAt = (i: number, v: string) => onChange(arr.map((x, j) => (j === i ? v : x)));
+      const add = () => onChange([...arr, ""]);
+      const removeAt = (i: number) => onChange(arr.filter((_, j) => j !== i));
+      return titled(
+        <div className="repeater">
+          {arr.map((v, i) => (
+            <div className="repeater-row" key={i}>
+              <input className="krds-input" value={v} onChange={(e) => setAt(i, e.target.value)} />
+              <button type="button" aria-label={`${i + 1}번 항목 삭제`} onClick={() => removeAt(i)}>✕</button>
+            </div>
+          ))}
+          <button type="button" aria-label="항목 추가" onClick={add}>＋ 항목 추가</button>
+        </div>,
+      );
+    }
+    case "table": {
+      const rows = Array.isArray(value) ? (value as string[][]) : [];
+      const cols = rows[0]?.length ?? 0;
+      const setCell = (r: number, c: number, v: string) =>
+        onChange(rows.map((row, ri) => (ri === r ? row.map((x, ci) => (ci === c ? v : x)) : row)));
+      const addRow = () => onChange([...rows, Array.from({ length: cols || 1 }, () => "")]);
+      const addCol = () => onChange(rows.map((row) => [...row, ""]));
+      const removeRow = (r: number) => onChange(rows.filter((_, ri) => ri !== r));
+      return titled(
+        <div className="table-editor">
+          {rows.map((row, ri) => (
+            <div className="table-row" key={ri}>
+              {row.map((cell, ci) => (
+                <input className="krds-input" key={ci} value={cell} onChange={(e) => setCell(ri, ci, e.target.value)} />
+              ))}
+              <button type="button" aria-label={`${ri + 1}행 삭제`} onClick={() => removeRow(ri)}>✕</button>
+            </div>
+          ))}
+          <div className="table-editor-actions">
+            <button type="button" onClick={addRow}>＋ 행</button>
+            <button type="button" onClick={addCol}>＋ 열</button>
+          </div>
+        </div>,
+      );
+    }
     default:
       // text / url
       return titled(

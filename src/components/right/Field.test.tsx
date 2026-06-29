@@ -83,3 +83,29 @@ describe("Field — KRDS 폼 마크업", () => {
     expect(onChange).toHaveBeenCalledWith("http://x/z.png");
   });
 });
+
+describe("Field — repeater/table", () => {
+  it("repeater: 문자열 항목 편집 + 추가/삭제", () => {
+    const onChange = vi.fn();
+    const { container } = render(
+      <Field schema={{ key: "columns", label: "열", type: "repeater" }} value={["가", "나"]} onChange={onChange} />,
+    );
+    const inputs = container.querySelectorAll(".repeater-row input");
+    expect(inputs).toHaveLength(2);
+    fireEvent.change(inputs[0], { target: { value: "다" } });
+    expect(onChange).toHaveBeenCalledWith(["다", "나"]);
+    fireEvent.click(screen.getByRole("button", { name: "항목 추가" }));
+    expect(onChange).toHaveBeenLastCalledWith(["가", "나", ""]);
+  });
+
+  it("table: 셀 편집", () => {
+    const onChange = vi.fn();
+    const { container } = render(
+      <Field schema={{ key: "rows", label: "표", type: "table" }} value={[["a", "b"], ["c", "d"]]} onChange={onChange} />,
+    );
+    const cells = container.querySelectorAll(".table-editor input");
+    expect(cells).toHaveLength(4);
+    fireEvent.change(cells[3], { target: { value: "z" } });
+    expect(onChange).toHaveBeenCalledWith([["a", "b"], ["c", "z"]]);
+  });
+});
