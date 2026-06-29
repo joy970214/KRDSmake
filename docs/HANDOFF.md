@@ -1,15 +1,70 @@
 # 작업 인수인계 (이어서 진행용)
 
-- 최종 업데이트: 2026-06-29 (**Step 5 우측 설정 자동 폼 구현 완료** — SDD 6 task + 검증 보강)
-- 저장소: `git@github.com:joy970214/KRDSmake.git` (브랜치 `master`)
-  ⚠️ origin보다 **앞섬** — Step 5 설계(`8a6a9af`)·계획(`09c58d1`) + Step5 구현 커밋들 미푸시.
+- 최종 업데이트: 2026-06-29 (**컴포넌트 설정 풀세트 + 페이지 설정 개편 구현 완료** — feat/rich-settings 브랜치, 머지 보류 中)
+- 저장소: `git@github.com:joy970214/KRDSmake.git`
+  ⚠️ origin보다 **앞섬**(미푸시). 현재 **작업 브랜치 `feat/rich-settings`** 에 있음(master 미머지).
 - 프로젝트: KRDS 기반 공공 웹사이트 빌더 (노코드, 정적 export)
 
-> **재개 시 다음 작업 = Step 6 (테마 라이트/선명/시스템 + 디바이스 전환).** 설계·계획 아직 없음 →
-> 브레인스토밍 → writing-plans → subagent-driven-development 순서.
+> **재개 시(내일, 2026-06-30) 다음 작업 = §0의 "열린 결정 1건"(표 머리글 위조 클래스) 답 받고 처리 →
+> 재검증 → master 머지 → 그다음 Step 6(테마+디바이스).** §0를 먼저 읽을 것.
 >
-> 이번 세션 완료: **Step 5 우측 설정 자동 폼**(§Step5). 스키마 기반 자동 폼(RHF/Zod 미사용),
-> 2모드(컴포넌트/페이지), KRDS 폼 마크업 위젯 12종, 실시간 반영, 캔버스 사이드바 토글→페이지 설정 폼 이전.
+> 이번 세션 완료: 사용자 요청(버튼 등 컴포넌트 설정이 2개뿐 / 브레드크럼·인페이지 내비 토글이 렌더 안 됨 /
+> 토글 on-off가 우측 패널에서 안 보임) 해결. **A. 배치 6종 KRDS 변형 풀세트 + B. 페이지 설정 개편**
+> (브레드크럼·인페이지 내비 실제 렌더 + KRDS 토글 스위치 + 제목/slug 편집). §0 참조.
+
+---
+
+## 0. 🚧 진행 중 — `feat/rich-settings` 브랜치 (내일 이어서)
+
+> 사용자 보고 3건 해결 작업. **구현 9 task + tsc fix 전부 완료, 머지만 보류.** 머지 전에 아래 "열린 결정 1건"만 정하면 됨.
+
+- **브랜치**: `feat/rich-settings` (master `9aee291`에서 분기, **10 커밋, master 미머지·미푸시**).
+- **설계**: `docs/superpowers/specs/2026-06-29-rich-settings-component-page-design.md`
+- **계획**: `docs/superpowers/plans/2026-06-29-rich-settings-component-page.md` (10 task, 전체 코드 포함)
+- **SDD 레저**: `.superpowers/sdd/progress.md` (task별 완료/Minor 기록). 브리프/리포트/리뷰diff도 `.superpowers/sdd/`에.
+- **검증 상태**: vitest **218 통과**(30 파일) · tsc 0 · lint 0 · static build OK.
+
+### 한 것 (A. 컴포넌트 설정 풀세트 — 배치 6종)
+KRDS 키트 실존 변형만 추가. 클래스 단일매핑 → **여러 prop 조합**으로 리팩터링. 비표준(카드/제목영역/이미지정렬)은 인라인 스타일(위조 클래스 금지).
+- **버튼**(`9424bc0`): 크기(xsmall~xlarge)·텍스트형(`text`)·아이콘(없음/글자+아이콘/아이콘만 `icon`+`svg-icon ico-sch`)·비활성(`disabled`)·링크형(`<a>`+href). `buttonClass()` 조립.
+- **입력폼**(`a9223cf`): 크기(small/medium/large)·상태(기본/오류`is-error`/성공`is-success`/비활성)·필수·입력타입(text/email/tel/number/password/date).
+- **표**(`8f0e50c`): 머리글 위치(열형/행형)·캡션 표시(`sr-only`). ⚠️**행형이 열린 결정 대상**(아래).
+- **이미지**(`d49cdd3`): 정렬(text-align)·폭(width 인라인).
+- **카드**(`f6152a1`): 썸네일(image URL)·테두리(인라인 border).
+- **제목영역**(`1e9ad20`): 정렬·크기(h2 font-size 인라인 매핑 small1.6/medium2/large2.4rem).
+
+### 한 것 (B. 페이지 설정 개편)
+- **브레드크럼**(`14c74ae`): `lib/breadcrumb.ts buildBreadcrumb(sitemap,nodeId)`(홈+조상경로, LNB와 동일 findPath 패턴) → Canvas가 `showBreadcrumb` ON이고 항목≥2면 **페이지 제목 위**에 KRDS `nav.krds-breadcrumb-wrap` 렌더(읽기전용).
+- **인페이지 내비**(`06b56dd`): `lib/in-page-nav.ts buildInPageNav(page)`(최상위·비숨김 page-title 제목들) → Canvas가 `showInPageNavigation` ON이면 **우측 레일**(`.page-frame` flex 3칼럼: LNB260|main|inpage240)에 KRDS `krds-in-page-navigation-type` 렌더. 제목영역 없으면 안내문(`in-page-empty`). editor.css 레일 폭 추가.
+- **페이지 설정 폼**(`475d7a0`): 네이티브 체크박스 3개 → **KRDS 토글 스위치**(`krds-form-toggle-switch`, on/off 시각화). + **페이지 제목/URL slug 편집**(`renameNode` 사용, 홈은 slug 숨김). SEO 필드 유지. 토글 라벨 텍스트 유지(기존 테스트 호환).
+- **tsc fix**(`ecc9487`): breadcrumb.test 픽스처가 SitemapNode 필수필드 누락 직접 캐스트 → tsc 실패(vitest는 통과). `node()` 헬퍼로 보강.
+
+### ⚠️ 열린 결정 1건 (머지 전 필수 — 내일 사용자에게 물을 것)
+**표 "행형" 머리글의 `tbl row` 클래스가 KRDS 키트에 없음**(위조 클래스 = COMPONENT-FIDELITY 위반).
+- 최종 리뷰(opus)가 발견: `vendor/krds/html/code/*.html` 어디에도 `tbl row` 없음. `output.css`는 `.tbl.data`만 스타일 → `.tbl.col`/`.tbl.row` 모두 inert. 즉 현재 "행형"은 **시각 변화 0 + 위조 클래스를 익스포트 HTML에 내보냄**. (`tbl col data`는 `table.html` 샘플에 실존 → 충실.)
+- 통찰: 열형/행형의 **진짜** 차이는 클래스가 아니라 `<th scope>` 마크업(열형=thead만 헤더·본문 전부 td / 행형=첫 칼럼 `th scope=row`). 현재 코드는 항상 첫 본문셀을 `th scope=row`로 냄(기존부터).
+- **선택지** (사용자 답 대기): ① **제대로 고치기(권장)** = `tbl row` 제거(항상 `tbl col data`), headerType가 `<th scope>` 시맨틱을 제어(열형=본문 전부 td, 행형=첫 칸 th scope=row). 테스트·스냅샷 갱신. / ② headerType 옵션 제거. / ③ 와이브(런타임 무해, 단 충실도 위반 지속). 
+- 처리 위치: `src/registry/components/table.tsx`(Preview+html), `table.test.tsx`(현재 `tbl row data` 단언 → 시맨틱 단언으로), 스냅샷.
+
+### 최종 리뷰 결론(opus, 전체 브랜치)
+**Ready to merge WITH FIXES** — 위 표 1건만. 나머지 전부(버튼/입력폼/이미지/카드/제목영역, 브레드크럼·인페이지·토글) KRDS 충실도·접근성·통합(브레드크럼+인페이지+LNB 공존, Field 위젯 select=string/checkbox=boolean round-trip) 검증 통과. 누적 Minor 9건은 전부 **백로그 적정**으로 분류(레저에 상세, 요약 §0 하단).
+
+### 백로그(이번 작업서 미룬 Minor, 머지 무관)
+1. 버튼 html 아이콘 `aria-hidden` 없음(icon=with) / label·href String() 미강제 / icon=with html 무테스트.
+2. 입력폼 `is-success` 무테스트 / `*` 공백 위치 Preview·html 미세 불일치.
+3. 표 첫 본문셀 `th scope=row` 시맨틱(열린 결정 ①로 같이 해결될 항목).
+4. 이미지 캡션+가운데정렬 시 figure(block) 미중앙(인라인 text-align 한계, `margin:auto` 후속).
+5. 카드 테스트 `toContain("border")` 느슨.
+6. 제목영역 `align as` 캐스트(select 강제라 안전).
+7. 브레드크럼 li index key / 이론적 double-home / path entry isHome 하드코드(현 사이트맵 구조상 비활성).
+8. 인페이지 `sections` 무조건 계산(순수·무해).
+9. PageSettingsForm `node` 셀렉터가 외부 `page` 클로저(단일 셀렉터로 합치면 idiomatic) / pg-title input `type="text"` 생략(기본값).
+
+### 내일 재개 순서
+1. §0 "열린 결정" 사용자 답 → 표 처리(TDD: 테스트 먼저).
+2. 재검증: `npx vitest run` + `npx tsc --noEmit` + `npm run lint` + `npm run build`.
+3. **머지**: superpowers:finishing-a-development-branch (feat/rich-settings → master). 필요시 push.
+4. 그다음 **Step 6**(테마 라이트/선명/시스템 + 디바이스 전환) 착수 — 설계·계획 아직 없음(브레인스토밍부터).
 
 ---
 
@@ -32,6 +87,7 @@
 | **4-5** | **카테고리 메뉴(섹션 랜딩)** — isCategory 토글 + 카테고리 제목클릭→첫 하위 콘텐츠로 라우팅 | ✅ |
 | **4-6** | **컴포넌트 KRDS 충실도 audit** — 원칙 명문화 + error 4건(button/table/header/footer) 교정 | ✅ |
 | **5** | **우측 설정 패널 자동 폼 + 실시간 반영** (RHF/Zod 안 씀, 스키마 기반 직접 구현) | ✅ |
+| **5+** | **컴포넌트 설정 풀세트 + 페이지 설정 개편**(브레드크럼·인페이지 내비 렌더·토글 스위치·제목/slug) | 🚧 §0(머지 보류, 표 결정 1건) |
 | 6 | 테마(라이트/선명/시스템) + 디바이스 전환 | ⬜ |
 | 7 | HTML 익스포트 + ZIP 다운로드 | ⬜ |
 
