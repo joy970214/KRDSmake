@@ -199,3 +199,32 @@ describe("브레드크럼", () => {
     expect(container.querySelector("nav.krds-breadcrumb-wrap")).toBeNull();
   });
 });
+
+describe("인페이지 내비게이션", () => {
+  it("showInPageNavigation ON이면 우측 레일을 렌더한다", () => {
+    store.getState().updatePageMeta(pageId, { showInPageNavigation: true });
+    const { container } = renderCanvas();
+    expect(container.querySelector(".krds-in-page-navigation-type")).not.toBeNull();
+  });
+
+  it("제목영역이 있으면 그 제목을 목록으로 보여준다", () => {
+    const id = store.getState().addComponent(pageId, "page-title");
+    store.getState().updateComponentProps(pageId, id, { title: "개요" });
+    store.getState().updatePageMeta(pageId, { showInPageNavigation: true });
+    render(
+      <EditorStoreProvider store={store}>
+        <DndContext>
+          <Canvas />
+        </DndContext>
+      </EditorStoreProvider>,
+    );
+    expect(
+      screen.getByRole("link", { name: "개요" }),
+    ).toBeInTheDocument();
+  });
+
+  it("showInPageNavigation OFF이면 레일이 없다", () => {
+    const { container } = renderCanvas();
+    expect(container.querySelector(".krds-in-page-navigation-type")).toBeNull();
+  });
+});
