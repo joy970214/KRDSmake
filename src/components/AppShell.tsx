@@ -10,6 +10,7 @@ import {
 } from "@dnd-kit/core";
 import { Canvas } from "./Canvas";
 import { LeftPanel } from "./left/LeftPanel";
+import { RightPanel } from "./right/RightPanel";
 import { useEditorState, useEditorStoreApi } from "../store/context";
 import { planDrop } from "../lib/dnd-plan";
 
@@ -75,12 +76,7 @@ export function AppShell() {
             <Canvas />
           </main>
           <aside className="panel panel-right">
-            <div className="panel-head">
-              <strong>설정</strong>
-            </div>
-            <p className="panel-placeholder">
-              캔버스에서 대상을 선택하면 설정이 표시됩니다. (Step 5)
-            </p>
+            <RightPanel />
           </aside>
         </div>
       </div>

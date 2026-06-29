@@ -23,7 +23,6 @@ export function Canvas() {
   const activePageId = useEditorState((s) => s.activePageId);
   const selection = useEditorState((s) => s.selection);
   const { setNodeRef, isOver } = useDroppable({ id: CANVAS_DROPPABLE_ID });
-  const api = useEditorStoreApi();
   if (!site) return null;
 
   const page = site.pages.find((p) => p.id === activePageId) ?? site.pages[0];
@@ -71,20 +70,7 @@ export function Canvas() {
           className={`canvas-page${isOver ? " is-drop-over" : ""}`}
           aria-label="페이지 본문(컴포넌트 드롭 영역)"
         >
-          <div className="canvas-page-head">
-            <h2 className="canvas-page-title">{page.title}</h2>
-            {/* 토글은 실제로 표시할 LNB가 있을 때만 노출(홈·하위없는 단독메뉴에선 숨김) */}
-            {lnb ? (
-              <label className="sidebar-toggle">
-                <input
-                  type="checkbox"
-                  checked={showSidebar}
-                  onChange={(e) => api.getState().setPageSidebar(page.id, e.target.checked)}
-                />
-                사이드바 표시
-              </label>
-            ) : null}
-          </div>
+          <h2 className="canvas-page-title">{page.title}</h2>
           {components.length === 0 ? (
             <p className="empty-guide">
               좌측의 컴포넌트를 이 영역으로 드래그하여 페이지를 구성하세요.

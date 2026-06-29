@@ -474,3 +474,15 @@ button.node-grip {
     width: 100%;
   }
 }
+
+/* 우측 설정 폼 */
+.settings-form .panel-head { border-bottom: 1px solid var(--krds-color-light-gray-20, #cdd1d5); }
+.settings-body { padding: 12px; display: flex; flex-direction: column; gap: 14px; }
+.settings-body .form-group { display: flex; flex-direction: column; gap: 4px; }
+.settings-body .form-tit label { font-size: 13px; font-weight: 600; }
+.settings-body .required { color: var(--krds-color-light-point-50, #f04438); }
+.krds-form-check.inline { display: flex; align-items: center; gap: 6px; font-size: 13px; }
+.field-img-preview { max-width: 100%; margin-top: 6px; border: 1px solid var(--krds-color-light-gray-20, #cdd1d5); border-radius: 4px; }
+.repeater-row, .table-row { display: flex; gap: 4px; margin-bottom: 4px; }
+.repeater-row input, .table-row input { flex: 1; min-width: 0; }
+.table-editor-actions { display: flex; gap: 6px; margin-top: 4px; }

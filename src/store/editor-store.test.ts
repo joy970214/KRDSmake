@@ -419,24 +419,6 @@ describe("selectComponent / clearSelection", () => {
   });
 });
 
-describe("setPageSidebar", () => {
-  it("페이지의 showSidebar를 설정한다", () => {
-    const pageId = store.getState().site!.pages[0].id;
-    store.getState().setPageSidebar(pageId, false);
-    expect(store.getState().site!.pages.find((p) => p.id === pageId)!.showSidebar).toBe(false);
-    store.getState().setPageSidebar(pageId, true);
-    expect(store.getState().site!.pages.find((p) => p.id === pageId)!.showSidebar).toBe(true);
-  });
-
-  it("다른 페이지에는 영향을 주지 않는다(기본은 미설정=undefined)", () => {
-    const homeId = store.getState().site!.pages[0].id;
-    const nodeId = store.getState().addSitemapNode({ title: "서비스", slug: "service" });
-    const otherPage = store.getState().site!.pages.find((p) => p.sitemapNodeId === nodeId)!;
-    store.getState().setPageSidebar(otherPage.id, false);
-    expect(store.getState().site!.pages.find((p) => p.id === homeId)!.showSidebar).toBeUndefined();
-  });
-});
-
 describe("findInstance", () => {
   it("최상위와 칼럼 안 자식을 모두 찾는다", () => {
     const pageId = store.getState().site!.pages[0].id;
