@@ -27,4 +27,20 @@ describe("카드", () => {
     expect(html).toContain("신청하기");
     expect(html).toContain('href="/apply"');
   });
+
+  it("썸네일 URL이 있으면 img를 렌더한다", () => {
+    const html = def.exportTemplates.html(
+      { title: "카드", text: "설명", thumbnail: "/t.png" },
+      makeExportCtx(),
+    );
+    expect(html).toContain('src="/t.png"');
+  });
+
+  it("테두리를 켜면 ul에 border 스타일을 준다", () => {
+    const html = def.exportTemplates.html(
+      { title: "카드", text: "설명", bordered: true },
+      makeExportCtx(),
+    );
+    expect(html).toContain("border");
+  });
 });
