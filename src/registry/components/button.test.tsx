@@ -35,6 +35,37 @@ describe("버튼 컴포넌트 정의", () => {
       );
       expect(html).toContain("secondary");
     });
+
+    it("크기/텍스트형 클래스를 조합한다", () => {
+      const html = def.exportTemplates.html(
+        { label: "검색", variant: "primary", size: "large", textStyle: true },
+        makeExportCtx(),
+      );
+      expect(html).toContain('class="krds-btn primary large text"');
+    });
+
+    it("비활성이면 disabled를 단다", () => {
+      const html = def.exportTemplates.html({ label: "확인", disabled: true }, makeExportCtx());
+      expect(html).toContain("disabled");
+    });
+
+    it("아이콘만이면 icon 클래스 + svg-icon을 렌더하고 aria-label을 단다", () => {
+      const html = def.exportTemplates.html({ label: "검색", icon: "only" }, makeExportCtx());
+      expect(html).toContain("krds-btn");
+      expect(html).toContain("icon");
+      expect(html).toContain('class="svg-icon ico-sch"');
+      expect(html).toContain('aria-label="검색"');
+    });
+
+    it("링크처럼 동작이면 a 태그 + href로 렌더한다", () => {
+      const html = def.exportTemplates.html(
+        { label: "이동", asLink: true, href: "/go" },
+        makeExportCtx(),
+      );
+      expect(html).toContain("<a ");
+      expect(html).toContain('href="/go"');
+      expect(html).not.toContain("<button");
+    });
   });
 
   describe("Preview", () => {

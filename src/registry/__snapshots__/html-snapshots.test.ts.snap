@@ -1,6 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`컴포넌트 HTML 익스포트 스냅샷 > button — 기본 마크업 1`] = `"<button type="button" class="krds-btn primary">버튼</button>"`;
+exports[`컴포넌트 HTML 익스포트 스냅샷 > button — 기본 마크업 1`] = `"<button type="button" class="krds-btn primary medium">버튼</button>"`;
 
 exports[`컴포넌트 HTML 익스포트 스냅샷 > card — 기본 마크업 1`] = `
 "<ul class="krds-structured-list type-full">
