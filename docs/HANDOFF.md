@@ -54,7 +54,10 @@
   2. **파일 업로드**(image 자산): IndexedDB Blob·자산 목록·alt(좌측 자산 탭). 현재 image는 URL만.
   3. **폼 입력 컴포넌트 확충**(결과 사이트용 select/radio/checkbox/textarea/date) — audit §4-6 백로그.
   4. **PageSettingsForm 체크박스 시각 마감**: 간이 `.krds-form-check.inline` 구조라 KRDS 커스텀 체크박스 스타일 미적용(네이티브 체크박스). 기능 정상, 시각 폴리시 후속.
-  5. `set` 헬퍼 복합 타입표기(`Parameters<ReturnType<...>>`)·repeater/table index key는 무해, 정리 선택.
+  5. **⚠️ 페이지 설정 일부는 현재 persist-only(렌더 소비처 없음)** — 설계가 의도적으로 둔 forward-looking 메타데이터. `showSidebar`만 캔버스가 소비(LNB). **`showBreadcrumb`·`showInPageNavigation`는 렌더러 미구현**(브레드크럼/인페이지 내비 렌더 = Step 6/7 소관), `seoTitle`/`seoDescription`은 **익스포트(Step 7)에서 소비** 예정. 토글해도 지금은 캔버스 변화 없음 — 후속 단계에서 배선.
+  6. `set` 헬퍼 복합 타입표기(`Parameters<ReturnType<...>>`)·repeater/table index key는 무해, 정리 선택.
+  7. **Field number 위젯 빈값 처리**: 비우면 `""`(빈 문자열)을 number prop에 씀 → 향후 number editableProp 추가 시 Preview/export에 문자열 유입 우려. 현재 number 타입 쓰는 컴포넌트 없어 라이브 경로 없음. 추가 시 `undefined`/기본값으로 교정 권장(Field.tsx number case).
+  8. **레이아웃 삭제 엣지케이스**: 칼럼 자식이 선택된 채로 부모 레이아웃을 삭제하면 `removeComponent`가 selection을 안 지움(부모 id만 비교) → ComponentForm `findInstance` undefined → 빈 패널. 드묾. 삭제 후 미해결 선택이면 `clearSelection` 추가 고려.
 
 ### 4-6. 컴포넌트 KRDS 충실도 audit (완료)
 - 원칙: `docs/COMPONENT-FIDELITY.md` — **모든 컴포넌트·폼 위젯·패턴 마크업은 `vendor/krds/html/code/*.html`(KRDS 공식 키트)에서 가져온다.** 대응 없으면 가장 가까운 패턴 + `isKrdsStandard:false`.
