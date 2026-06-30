@@ -39,4 +39,19 @@ describe("PreviewDocument", () => {
     expect(container.querySelectorAll(".krds-btn").length).toBe(1);
     expect(visibleId).not.toBe(hiddenId);
   });
+
+  it("다단 레이아웃 인스턴스를 .krds-grid + N개의 .krds-grid-col로 렌더한다", () => {
+    const pageId = store.getState().site!.pages[0].id;
+    const layoutId = store.getState().addComponent(pageId, "layout");
+    store.getState().setLayoutColumns(pageId, layoutId, 3);
+    store.getState().addComponentToColumn(pageId, layoutId, 0, "button");
+    const site = store.getState().site!;
+    const page = site.pages.find((p) => p.id === pageId)!;
+    const { container } = render(<PreviewDocument site={site} page={page} ctx={ctxFor()} />);
+    expect(container.querySelector(".krds-grid")).not.toBeNull();
+    expect(container.querySelectorAll(".krds-grid-col").length).toBe(3);
+    // 첫 번째 칼럼에 버튼이 렌더됐는지 확인
+    const firstCol = container.querySelectorAll(".krds-grid-col")[0];
+    expect(firstCol.querySelector(".krds-btn")).not.toBeNull();
+  });
 });

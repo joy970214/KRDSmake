@@ -1,4 +1,4 @@
-import { render } from "@testing-library/react";
+import { render, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it } from "vitest";
 import { createEditorStore, type EditorStore } from "../store/editor-store";
 import { DevicePreview } from "./DevicePreview";
@@ -34,5 +34,16 @@ describe("DevicePreview", () => {
       <DevicePreview mode="high-contrast" device="pc" site={site} page={site.pages[0]} />,
     );
     expect(getByTitle("디바이스 미리보기").style.width).toBe("");
+  });
+
+  it("PreviewDocument 콘텐츠를 iframe body로 포털한다", async () => {
+    const site = store.getState().site!;
+    const { getByTitle } = render(
+      <DevicePreview mode="light" device="pc" site={site} page={site.pages[0]} />,
+    );
+    const iframe = getByTitle("디바이스 미리보기") as HTMLIFrameElement;
+    await waitFor(() => {
+      expect(iframe.contentDocument?.body.querySelector(".canvas-frame")).not.toBeNull();
+    });
   });
 });
