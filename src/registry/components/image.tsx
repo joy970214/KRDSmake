@@ -14,7 +14,7 @@ export const imageDefinition: ComponentDefinition = {
   description: "사진·일러스트 등 이미지를 표시.",
   isKrdsStandard: true,
   variants: [],
-  defaultProps: { src: "", alt: "", caption: "" },
+  defaultProps: { src: "", alt: "", caption: "", align: "left", fit: "auto" },
   editableProps: [
     { key: "src", label: "이미지", type: "image", required: true },
     {
@@ -25,14 +25,35 @@ export const imageDefinition: ComponentDefinition = {
       help: "화면을 못 보는 사용자에게 이미지를 설명합니다.",
     },
     { key: "caption", label: "설명(선택)", type: "text" },
+    {
+      key: "align",
+      label: "정렬",
+      type: "select",
+      options: [
+        { label: "왼쪽", value: "left" },
+        { label: "가운데", value: "center" },
+        { label: "오른쪽", value: "right" },
+      ],
+    },
+    {
+      key: "fit",
+      label: "이미지 폭",
+      type: "select",
+      options: [
+        { label: "원본", value: "auto" },
+        { label: "꽉 채움", value: "full" },
+      ],
+    },
   ],
 
   Preview({ props }: { props: Props }) {
     const src = String(props.src || PLACEHOLDER);
     const alt = String(props.alt ?? "");
     const caption = String(props.caption ?? "");
-    const img = <img src={src} alt={alt} style={{ maxWidth: "100%" }} />;
-    return caption ? (
+    const align = String(props.align || "left");
+    const width = props.fit === "full" ? "100%" : "auto";
+    const img = <img src={src} alt={alt} style={{ width, maxWidth: "100%" }} />;
+    const inner = caption ? (
       <figure>
         {img}
         <figcaption>{caption}</figcaption>
@@ -40,15 +61,19 @@ export const imageDefinition: ComponentDefinition = {
     ) : (
       img
     );
+    return <div style={{ textAlign: align as "left" | "center" | "right" }}>{inner}</div>;
   },
 
   exportTemplates: {
     html(props) {
-      const img = `<img src="${attr(props.src)}" alt="${attr(props.alt)}">`;
+      const align = String(props.align || "left");
+      const width = props.fit === "full" ? "100%" : "auto";
+      const img = `<img src="${attr(props.src)}" alt="${attr(props.alt)}" style="width:${width};max-width:100%">`;
       const caption = String(props.caption ?? "");
-      return caption
+      const inner = caption
         ? `<figure>\n\t${img}\n\t<figcaption>${escapeHtml(caption)}</figcaption>\n</figure>`
         : img;
+      return `<div style="text-align:${align}">${inner}</div>`;
     },
     vue: () => pending2x("vue"),
     react: () => pending2x("react"),

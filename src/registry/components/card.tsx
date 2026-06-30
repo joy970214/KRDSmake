@@ -17,6 +17,8 @@ export const cardDefinition: ComponentDefinition = {
     badge: "",
     linkLabel: "",
     linkUrl: "",
+    thumbnail: "",
+    bordered: false,
   },
   editableProps: [
     { key: "title", label: "제목", type: "text", required: true },
@@ -24,14 +26,18 @@ export const cardDefinition: ComponentDefinition = {
     { key: "badge", label: "뱃지(선택)", type: "text" },
     { key: "linkLabel", label: "버튼 글자(선택)", type: "text" },
     { key: "linkUrl", label: "버튼 링크(선택)", type: "url" },
+    { key: "thumbnail", label: "썸네일 이미지(선택)", type: "image" },
+    { key: "bordered", label: "테두리", type: "checkbox" },
   ],
 
   Preview({ props }: { props: Props }) {
     const badge = String(props.badge ?? "");
     const linkLabel = String(props.linkLabel ?? "");
     const linkUrl = String(props.linkUrl || "#");
+    const thumbnail = String(props.thumbnail ?? "");
+    const ulStyle = props.bordered ? { border: "1px solid #ccc" } : undefined;
     return (
-      <ul className="krds-structured-list type-full">
+      <ul className="krds-structured-list type-full" style={ulStyle}>
         <li className="structured-item">
           <div className="in">
             {badge ? (
@@ -40,6 +46,9 @@ export const cardDefinition: ComponentDefinition = {
               </div>
             ) : null}
             <div className="card-body">
+              {thumbnail ? (
+                <img src={thumbnail} alt="" style={{ width: "100%", maxWidth: "100%" }} />
+              ) : null}
               <a href={linkUrl} className="c-text">
                 <p className="c-tit">
                   <span className="span">{String(props.title ?? "")}</span>
@@ -65,6 +74,11 @@ export const cardDefinition: ComponentDefinition = {
       const badge = String(props.badge ?? "");
       const linkLabel = String(props.linkLabel ?? "");
       const linkUrl = String(props.linkUrl || "#");
+      const thumbnail = String(props.thumbnail ?? "");
+      const ulStyle = props.bordered ? ` style="border:1px solid #ccc"` : "";
+      const thumbHtml = thumbnail
+        ? `\n\t\t\t\t<img src="${attr(thumbnail)}" alt="" style="width:100%;max-width:100%">`
+        : "";
       const badgeHtml = badge
         ? `\n\t\t\t<div class="card-top"><span class="krds-badge bg-light-primary">${escapeHtml(badge)}</span></div>`
         : "";
@@ -72,10 +86,10 @@ export const cardDefinition: ComponentDefinition = {
         ? `\n\t\t\t\t<div class="c-btn"><a href="${attr(linkUrl)}" class="krds-btn secondary">${escapeHtml(linkLabel)}</a></div>`
         : "";
       return [
-        `<ul class="krds-structured-list type-full">`,
+        `<ul class="krds-structured-list type-full"${ulStyle}>`,
         `\t<li class="structured-item">`,
         `\t\t<div class="in">${badgeHtml}`,
-        `\t\t\t<div class="card-body">`,
+        `\t\t\t<div class="card-body">${thumbHtml}`,
         `\t\t\t\t<a href="${attr(linkUrl)}" class="c-text">`,
         `\t\t\t\t\t<p class="c-tit"><span class="span">${escapeHtml(props.title)}</span></p>`,
         `\t\t\t\t\t<p class="c-txt">${escapeHtml(props.text)}</p>`,

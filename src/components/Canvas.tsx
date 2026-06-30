@@ -12,6 +12,8 @@ import type { PreviewCtx } from "../registry/types";
 import { useEditorState, useEditorStoreApi } from "../store/context";
 import { CANVAS_DROPPABLE_ID, columnDroppableId } from "../lib/dnd-plan";
 import { buildLnb } from "../lib/lnb";
+import { buildBreadcrumb } from "../lib/breadcrumb";
+import { buildInPageNav } from "../lib/in-page-nav";
 import type { ComponentInstance, SitemapNode } from "../lib/types";
 
 export { CANVAS_DROPPABLE_ID } from "../lib/dnd-plan";
@@ -41,6 +43,9 @@ export function Canvas() {
 
   const showSidebar = (page.showSidebar ?? true);
   const lnb = buildLnb(site.sitemap, page.sitemapNodeId);
+  const crumbs = page.showBreadcrumb ? buildBreadcrumb(site.sitemap, page.sitemapNodeId) : [];
+  const showInPageNav = !!page.showInPageNavigation;
+  const sections = buildInPageNav(page);
 
   const components = page.components.slice().sort((a, b) => a.order - b.order);
   const selectedId =
@@ -75,6 +80,19 @@ export function Canvas() {
             if (e.target === e.currentTarget) api.getState().clearSelection();
           }}
         >
+          {crumbs.length >= 2 ? (
+            <nav className="krds-breadcrumb-wrap" aria-label="현재 경로">
+              <ol className="breadcrumb">
+                {crumbs.map((c, i) => (
+                  <li key={i} className={c.isHome ? "home" : undefined}>
+                    <a href={c.path} className="txt" onClick={(e) => e.preventDefault()}>
+                      {c.title}
+                    </a>
+                  </li>
+                ))}
+              </ol>
+            </nav>
+          ) : null}
           <h2 className="canvas-page-title">{page.title}</h2>
           {components.length === 0 ? (
             <p className="empty-guide">
@@ -99,6 +117,35 @@ export function Canvas() {
             </SortableContext>
           )}
         </main>
+        {showInPageNav ? (
+          <div className="krds-in-page-navigation-type">
+            <div className="krds-in-page-navigation-area">
+              <div className="in-page-navigation-header">
+                <p className="quick-caption">이 페이지의 구성</p>
+                <p className="quick-title">{page.title}</p>
+              </div>
+              {sections.length > 0 ? (
+                <nav className="in-page-navigation-list" aria-label="콘텐츠 내 탐색">
+                  <ul>
+                    {sections.map((t, i) => (
+                      <li key={i}>
+                        <a
+                          href="#"
+                          className={i === 0 ? "active" : undefined}
+                          onClick={(e) => e.preventDefault()}
+                        >
+                          {t}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </nav>
+              ) : (
+                <p className="in-page-empty">제목영역 컴포넌트를 추가하면 목록이 생깁니다.</p>
+              )}
+            </div>
+          </div>
+        ) : null}
         </div>
 
         {footer ? footer.Preview({ props: site.globalLayout.footer, ctx }) : null}

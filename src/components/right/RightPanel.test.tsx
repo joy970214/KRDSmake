@@ -38,4 +38,16 @@ describe("RightPanel", () => {
     renderPanel();
     expect(screen.getByText("버튼 설정")).toBeInTheDocument();
   });
+
+  it("토글이 KRDS 토글 스위치 마크업으로 렌더된다", () => {
+    const { container } = renderPanel();
+    expect(container.querySelectorAll(".krds-form-toggle-switch").length).toBeGreaterThanOrEqual(3);
+  });
+
+  it("페이지 제목을 바꾸면 renameNode로 반영된다", () => {
+    renderPanel();
+    const input = screen.getByRole("textbox", { name: "페이지 제목" });
+    fireEvent.change(input, { target: { value: "새 제목" } });
+    expect(store.getState().site!.pages.find((p) => p.id === pageId)!.title).toBe("새 제목");
+  });
 });

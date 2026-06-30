@@ -486,3 +486,12 @@ button.node-grip {
 .repeater-row, .table-row { display: flex; gap: 4px; margin-bottom: 4px; }
 .repeater-row input, .table-row input { flex: 1; min-width: 0; }
 .table-editor-actions { display: flex; gap: 6px; margin-top: 4px; }
+
+/* 인페이지 내비(콘텐츠 내 탐색) 우측 레일 */
+.page-frame .krds-in-page-navigation-type {
+  flex: 0 0 240px;
+}
+.page-frame .in-page-empty {
+  color: #666;
+  font-size: 0.875rem;
+}

@@ -20,4 +20,17 @@ describe("제목영역", () => {
     );
     expect(html).toContain("설명입니다");
   });
+
+  it("가운데 정렬이면 text-align:center를 준다", () => {
+    const html = def.exportTemplates.html(
+      { title: "제목", align: "center" },
+      makeExportCtx(),
+    );
+    expect(html).toContain("text-align:center");
+  });
+
+  it("크게면 h2에 큰 font-size를 준다", () => {
+    const html = def.exportTemplates.html({ title: "제목", size: "large" }, makeExportCtx());
+    expect(html).toContain("font-size:2.4rem");
+  });
 });
