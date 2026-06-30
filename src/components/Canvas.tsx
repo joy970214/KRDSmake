@@ -364,7 +364,7 @@ function containsNode(node: SitemapNode, id: string): boolean {
 
 // KRDS 사이드 메뉴 2depth 항목(.lnb-item). 자식 있으면 토글+서브메뉴, 없으면 링크.
 // 에디터엔 KRDS JS가 없어 펼침은 클래스로만 처리 — 현재 페이지가 속한 가지를 active로 펼친다.
-function LnbItem({
+export function LnbItem({
   node,
   activeNodeId,
 }: {
