@@ -59,7 +59,9 @@ export function PreviewDocument({
   }
 
   return (
-    <div className="canvas-frame">
+    // 배경 투명 — 에디터 .canvas-frame 흰 배경이 iframe에 복제돼도 KRDS body 배경
+    // (고대비=검정/기본=흰색)이 그대로 비치도록(선명모드 충실도).
+    <div className="canvas-frame" style={{ background: "transparent" }}>
       {site.globalLayout.masthead.visible && masthead
         ? masthead.Preview({ props: site.globalLayout.masthead, ctx })
         : null}
