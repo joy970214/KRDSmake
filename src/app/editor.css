@@ -495,3 +495,45 @@ button.node-grip {
   color: #666;
   font-size: 0.875rem;
 }
+
+/* 상단바 미리보기 토글(테마/디바이스) — 에디터 크롬(비 KRDS) */
+.preview-controls { display: flex; gap: 12px; align-items: center; }
+.preview-controls .seg {
+  display: inline-flex;
+  border: 1px solid var(--krds-color-light-gray-30, #b1b8be);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.preview-controls .seg-btn {
+  padding: 4px 10px;
+  font-size: 13px;
+  background: #fff;
+  border: none;
+  border-left: 1px solid var(--krds-color-light-gray-20, #cdd1d5);
+  cursor: pointer;
+}
+.preview-controls .seg-btn:first-child { border-left: none; }
+.preview-controls .seg-btn[aria-pressed="true"] {
+  background: var(--krds-color-light-primary-50, #246beb);
+  color: #fff;
+}
+
+/* 디바이스 읽기전용 미리보기(iframe 격리) */
+.device-preview {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  width: 100%;
+  height: 100%;
+  padding: 24px;
+  background: #eef0f3;
+  overflow: auto;
+}
+.device-preview-frame {
+  width: 100%;
+  max-width: 1200px;
+  height: 100%;
+  min-height: 600px;
+  border: 1px solid var(--krds-color-light-gray-30, #b1b8be);
+  background: #fff;
+}

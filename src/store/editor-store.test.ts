@@ -453,6 +453,24 @@ describe("updatePageMeta", () => {
   });
 });
 
+describe("미리보기 상태(previewMode/previewDevice)", () => {
+  it("기본값은 light/pc 다", () => {
+    const s = store.getState();
+    expect(s.previewMode).toBe("light");
+    expect(s.previewDevice).toBe("pc");
+  });
+
+  it("setPreviewMode가 모드를 바꾼다", () => {
+    store.getState().setPreviewMode("high-contrast");
+    expect(store.getState().previewMode).toBe("high-contrast");
+  });
+
+  it("setPreviewDevice가 디바이스를 바꾼다", () => {
+    store.getState().setPreviewDevice("mobile");
+    expect(store.getState().previewDevice).toBe("mobile");
+  });
+});
+
 // 트리에서 id로 노드 찾기 (테스트 헬퍼)
 function findInTree(
   nodes: import("../lib/types").SitemapNode[],

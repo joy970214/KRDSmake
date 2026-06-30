@@ -228,3 +228,24 @@ describe("인페이지 내비게이션", () => {
     expect(container.querySelector(".krds-in-page-navigation-type")).toBeNull();
   });
 });
+
+describe("미리보기 분기", () => {
+  it("기본+PC면 인라인 편집 캔버스를 보여준다", () => {
+    renderCanvas();
+    expect(screen.getByLabelText("페이지 본문(컴포넌트 드롭 영역)")).toBeInTheDocument();
+    expect(screen.queryByTitle("디바이스 미리보기")).toBeNull();
+  });
+
+  it("디바이스가 pc가 아니면 iframe 미리보기로 전환한다", () => {
+    store.getState().setPreviewDevice("mobile");
+    renderCanvas();
+    expect(screen.getByTitle("디바이스 미리보기")).toBeInTheDocument();
+    expect(screen.queryByLabelText("페이지 본문(컴포넌트 드롭 영역)")).toBeNull();
+  });
+
+  it("선명 모드면 PC 폭이어도 iframe 미리보기로 전환한다", () => {
+    store.getState().setPreviewMode("high-contrast");
+    renderCanvas();
+    expect(screen.getByTitle("디바이스 미리보기")).toBeInTheDocument();
+  });
+});

@@ -3,7 +3,7 @@ import { newId } from "../lib/ids";
 import { recomputePaths } from "../lib/sitemap";
 import { createSite as makeSite } from "../lib/site-factory";
 import { getComponent } from "../registry";
-import type { ComponentInstance, Page, Site, SitemapNode } from "../lib/types";
+import type { ComponentInstance, Device, Page, Site, SitemapNode, ThemeMode } from "../lib/types";
 
 // ---- 순수 트리 헬퍼 (store 액션 내부에서만 사용) ----
 
@@ -201,6 +201,8 @@ export type EditorState = {
   site: Site | null;
   activePageId: string | null;
   selection: Selection | null;
+  previewMode: ThemeMode;
+  previewDevice: Device;
 
   createSite: (name: string) => void;
   addSitemapNode: (input: { title: string; slug: string; parentId?: string }) => string;
@@ -237,6 +239,8 @@ export type EditorState = {
   ) => void;
   selectComponent: (pageId: string, instanceId: string) => void;
   clearSelection: () => void;
+  setPreviewMode: (mode: ThemeMode) => void;
+  setPreviewDevice: (device: Device) => void;
 };
 
 export type EditorStore = StoreApi<EditorState>;
@@ -246,6 +250,8 @@ export function createEditorStore(): EditorStore {
     site: null,
     activePageId: null,
     selection: null,
+    previewMode: "light",
+    previewDevice: "pc",
 
     createSite(name) {
       const site = makeSite(name);
@@ -514,6 +520,14 @@ export function createEditorStore(): EditorStore {
 
     clearSelection() {
       set({ selection: null });
+    },
+
+    setPreviewMode(mode) {
+      set({ previewMode: mode });
+    },
+
+    setPreviewDevice(device) {
+      set({ previewDevice: device });
     },
   }));
 }

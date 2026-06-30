@@ -15,6 +15,7 @@ import { buildLnb } from "../lib/lnb";
 import { buildBreadcrumb } from "../lib/breadcrumb";
 import { buildInPageNav } from "../lib/in-page-nav";
 import type { ComponentInstance, SitemapNode } from "../lib/types";
+import { DevicePreview } from "./DevicePreview";
 
 export { CANVAS_DROPPABLE_ID } from "../lib/dnd-plan";
 
@@ -24,6 +25,8 @@ export function Canvas() {
   const site = useEditorState((s) => s.site);
   const activePageId = useEditorState((s) => s.activePageId);
   const selection = useEditorState((s) => s.selection);
+  const previewMode = useEditorState((s) => s.previewMode);
+  const previewDevice = useEditorState((s) => s.previewDevice);
   const api = useEditorStoreApi();
   const { setNodeRef, isOver } = useDroppable({ id: CANVAS_DROPPABLE_ID });
   if (!site) return null;
@@ -33,9 +36,15 @@ export function Canvas() {
     site,
     page,
     resolveAsset: () => undefined,
-    mode: "light",
-    device: "pc",
+    mode: previewMode,
+    device: previewDevice,
   };
+
+  if (previewMode !== "light" || previewDevice !== "pc") {
+    return (
+      <DevicePreview mode={previewMode} device={previewDevice} site={site} page={page} />
+    );
+  }
 
   const masthead = getComponent("masthead");
   const header = getComponent("header");
@@ -364,7 +373,7 @@ function containsNode(node: SitemapNode, id: string): boolean {
 
 // KRDS 사이드 메뉴 2depth 항목(.lnb-item). 자식 있으면 토글+서브메뉴, 없으면 링크.
 // 에디터엔 KRDS JS가 없어 펼침은 클래스로만 처리 — 현재 페이지가 속한 가지를 active로 펼친다.
-function LnbItem({
+export function LnbItem({
   node,
   activeNodeId,
 }: {
