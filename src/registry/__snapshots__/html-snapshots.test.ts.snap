@@ -101,8 +101,8 @@ exports[`컴포넌트 HTML 익스포트 스냅샷 > table — 기본 마크업 1
 		<colgroup><col><col></colgroup>
 		<thead><tr><th scope="col">제목1</th><th scope="col">제목2</th></tr></thead>
 		<tbody>
-		<tr><th scope="row">제목1-1</th><td>내용이 들어갑니다.</td></tr>
-		<tr><th scope="row">제목1-2</th><td>내용이 들어갑니다.</td></tr>
+		<tr><td>제목1-1</td><td>내용이 들어갑니다.</td></tr>
+		<tr><td>제목1-2</td><td>내용이 들어갑니다.</td></tr>
 		</tbody>
 	</table>
 </div>"

@@ -2,7 +2,9 @@ import { escapeHtml, pending2x, thumb } from "../helpers";
 import type { ComponentDefinition, Props } from "../types";
 
 // KRDS 마크업: div.krds-table-wrap > table.tbl.col.data > caption/thead/tbody.
-// 첫 열은 행 머리글(th scope=row), 나머지는 td.
+// KRDS 키트에 'tbl row' 클래스는 없음 — 클래스는 항상 'tbl col data'(실존).
+// 행형/열형은 KRDS 지침대로 클래스가 아니라 <th scope>로 구분한다:
+// 행형=본문 첫 칸 th scope=row(벤더 table.html 정본), 열형=본문 전부 td.
 function asColumns(props: Props): string[] {
   return Array.isArray(props.columns) ? (props.columns as string[]) : [];
 }
@@ -48,11 +50,11 @@ export const tableDefinition: ComponentDefinition = {
   Preview({ props }: { props: Props }) {
     const columns = asColumns(props);
     const rows = asRows(props);
-    const tblCls = `tbl ${props.headerType === "row" ? "row" : "col"} data`;
+    const rowHeader = props.headerType === "row";
     const showCaption = props.showCaption !== false;
     return (
       <div className="krds-table-wrap">
-        <table className={tblCls}>
+        <table className="tbl col data">
           <caption className={showCaption ? undefined : "sr-only"}>
             {String(props.caption ?? "")}
           </caption>
@@ -74,7 +76,7 @@ export const tableDefinition: ComponentDefinition = {
             {rows.map((r, ri) => (
               <tr key={ri}>
                 {r.map((cell, ci) =>
-                  ci === 0 ? (
+                  rowHeader && ci === 0 ? (
                     <th key={ci} scope="row">
                       {cell}
                     </th>
@@ -94,7 +96,7 @@ export const tableDefinition: ComponentDefinition = {
     html(props) {
       const columns = asColumns(props);
       const rows = asRows(props);
-      const tblCls = `tbl ${props.headerType === "row" ? "row" : "col"} data`;
+      const rowHeader = props.headerType === "row";
       const showCaption = props.showCaption !== false;
       const captionCls = showCaption ? "" : ` class="sr-only"`;
       const headCells = columns
@@ -104,7 +106,7 @@ export const tableDefinition: ComponentDefinition = {
         .map((r) => {
           const cells = r
             .map((cell, ci) =>
-              ci === 0
+              rowHeader && ci === 0
                 ? `<th scope="row">${escapeHtml(cell)}</th>`
                 : `<td>${escapeHtml(cell)}</td>`,
             )
@@ -115,7 +117,7 @@ export const tableDefinition: ComponentDefinition = {
       const colgroup = `<colgroup>${columns.map(() => "<col>").join("")}</colgroup>`;
       return [
         `<div class="krds-table-wrap">`,
-        `\t<table class="${tblCls}">`,
+        `\t<table class="tbl col data">`,
         `\t\t<caption${captionCls}>${escapeHtml(props.caption)}</caption>`,
         `\t\t${colgroup}`,
         `\t\t<thead><tr>${headCells}</tr></thead>`,
