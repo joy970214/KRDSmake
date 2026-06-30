@@ -495,3 +495,25 @@ button.node-grip {
   color: #666;
   font-size: 0.875rem;
 }
+
+/* 상단바 미리보기 토글(테마/디바이스) — 에디터 크롬(비 KRDS) */
+.preview-controls { display: flex; gap: 12px; align-items: center; }
+.preview-controls .seg {
+  display: inline-flex;
+  border: 1px solid var(--krds-color-light-gray-30, #b1b8be);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.preview-controls .seg-btn {
+  padding: 4px 10px;
+  font-size: 13px;
+  background: #fff;
+  border: none;
+  border-left: 1px solid var(--krds-color-light-gray-20, #cdd1d5);
+  cursor: pointer;
+}
+.preview-controls .seg-btn:first-child { border-left: none; }
+.preview-controls .seg-btn[aria-pressed="true"] {
+  background: var(--krds-color-light-primary-50, #246beb);
+  color: #fff;
+}

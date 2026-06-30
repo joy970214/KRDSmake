@@ -11,6 +11,7 @@ import {
 import { Canvas } from "./Canvas";
 import { LeftPanel } from "./left/LeftPanel";
 import { RightPanel } from "./right/RightPanel";
+import { PreviewControls } from "./PreviewControls";
 import { useEditorState, useEditorStoreApi } from "../store/context";
 import { planDrop } from "../lib/dnd-plan";
 
@@ -65,6 +66,8 @@ export function AppShell() {
         <header className="topbar">
           <strong className="app-name">KRDS 웹사이트 빌더</strong>
           <span className="topbar-sitename">{siteName}</span>
+          <span className="topbar-spacer" />
+          <PreviewControls />
           <span className="topbar-spacer" />
           <span className="topbar-hint">자동 저장됨</span>
         </header>
